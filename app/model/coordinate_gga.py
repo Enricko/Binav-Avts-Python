@@ -1,4 +1,4 @@
-from database.database import db
+from app.extensions import db
 
 class CoordinateGGA(db.Model):
     __tablename__ = "coordinate_ggas"

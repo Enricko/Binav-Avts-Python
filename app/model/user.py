@@ -1,5 +1,5 @@
 import re
-from database.database import db
+from app.extensions import db
 from sqlalchemy.orm import validates
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -31,26 +31,24 @@ class User(db.Model):
     @validates("name")
     def validate_name(self, key, name):
         if not name:
-            raise AssertionError("Name field is required.")
+            raise AssertionError("Name field is required")
         return name
-
-    @validates("status")
-    def validate_status(self, key, status):
-        if not status:
-            raise AssertionError("Status field is required.")
-        return status
 
     @validates("level")
     def validate_level(self, key, level):
+        if not level:
+            raise AssertionError("Level field is required")
         if level not in ["client", "admin", "owner"]:
             raise AssertionError("Invalid level value")
         return level
 
-    def set_password(self, password):
+    def set_password(self, password,password_confirmation):
         if not password:
             raise AssertionError("Password field is required")
         if len(password) < 8 or len(password) > 50:
-            raise AssertionError("Password must be between 8 and 50 characters")
+            raise AssertionError("Password must contain at least 8")
+        if password != password_confirmation:
+            raise AssertionError("Password confirmation doesnt match")
         self.password = generate_password_hash(password)
 
     def check_password(self, password):

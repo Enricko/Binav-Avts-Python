@@ -1,4 +1,4 @@
-from database.database import db
+from app.extensions import db
 from sqlalchemy.orm import validates
 
 class Client(db.Model):
@@ -19,10 +19,12 @@ class Client(db.Model):
     
     @validates("status")
     def validate_status(self, key, status):
+        if not status:
+            raise AssertionError("Status field is required")
         if status not in [0,1]:
-            raise AssertionError("Invalid status value")
+            raise AssertionError("Status only contain [true/false]")
         return status
-
+    
     def __repr__(self):
         return f"<Client(id_client={self.id_client}, id_user={self.id_user}, status={self.status}, timestamps={self.timestamps})>"
 

@@ -1,4 +1,4 @@
-from database.database import db
+from app.extensions import db
 
 class IpKapal(db.Model):
     __tablename__ = "ip_kapals"
