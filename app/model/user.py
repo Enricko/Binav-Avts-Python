@@ -22,7 +22,8 @@ class User(db.Model):
     def validate_email(self, key, email):
         if not email:
             raise AssertionError("Email field is required.")
-        if User.query.filter_by(email=email).first():
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user and existing_user.id_user != self.id_user:
             raise AssertionError("Email already exists")
         if not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", email):
             raise AssertionError("Please provide a valid email address")

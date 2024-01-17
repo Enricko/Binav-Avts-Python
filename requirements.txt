@@ -1,0 +1,6 @@
+dotenv
+flask
+flask-restx
+flask-sqlalchemy
+flask-jwt-extended
+mysql-connector-python
