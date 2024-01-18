@@ -3,18 +3,40 @@ from app.model.user import User
 from app.model.client import Client
 from flask_restx import Resource, reqparse
 from app.api_model.client import (
-    client_model,
+    get_client_model,
     insert_client_parser,
     update_client_parser,
 )
 from app.resources import ns
 
+# Pagination parameters
+pagination_parser = reqparse.RequestParser()
+pagination_parser.add_argument("page", type=int, help="Page number", default=1)
+pagination_parser.add_argument("per_page", type=int, help="Items per page", default=10)
+
 
 @ns.route("/client")
 class ClientList(Resource):
-    @ns.marshal_list_with(client_model)
+    @ns.marshal_list_with(get_client_model)
+    @ns.expect(pagination_parser)
     def get(self):
-        return Client.query.all()
+        args = pagination_parser.parse_args()
+        page = args["page"]
+        per_page = args["per_page"]
+        offset = (page - 1) * per_page
+
+        total_count = Client.query.count()
+
+        client = Client.query.offset(offset).limit(per_page).all()
+
+        return {
+            "message": "Data Client Ditemukan",
+            "status": 200,
+            "page": page,
+            "perpage": per_page,
+            "total": total_count,
+            "data": client,
+        }, 200
 
     @ns.expect(insert_client_parser)
     def post(self):
@@ -57,6 +79,21 @@ class ClientList(Resource):
 
 @ns.route("/client/<string:id_client>")
 class ClientData(Resource):
+    
+    @ns.marshal_list_with(get_client_model)
+    def get(self,id_client):
+
+        total_count = Client.query.count()
+
+        client = Client.query.get(id_client)
+
+        return {
+            "message": "Data Client Ditemukan",
+            "status": 200,
+            "total": total_count,
+            "data": client,
+        }, 200
+        
     @ns.expect(update_client_parser)
     def put(self, id_client):
         try:

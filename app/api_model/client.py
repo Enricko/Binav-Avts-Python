@@ -2,6 +2,11 @@ from flask_restx import fields, reqparse
 from app.extensions import api
 from app.api_model.user import user_model
 
+pagination_parser = reqparse.RequestParser()
+pagination_parser.add_argument("page", type=int, default=1, help="Page number")
+pagination_parser.add_argument("per_page", type=int, default=10, help="Items per page")
+
+
 
 client_model = api.model(
     "Client",
@@ -9,6 +14,18 @@ client_model = api.model(
         "id_client": fields.String,
         "status": fields.Boolean,
         "user": fields.Nested(user_model),
+    },
+)
+
+get_client_model = api.model(
+    "List Client",
+    {
+        "message": fields.String,
+        "status": fields.Integer,
+        "perpage": fields.Integer,
+        "page": fields.Integer,
+        "total": fields.Integer,
+        "data": fields.List(fields.Nested(client_model)),
     },
 )
 
