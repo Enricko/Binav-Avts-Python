@@ -21,7 +21,7 @@ class User(db.Model):
     @validates("email")
     def validate_email(self, key, email):
         if not email:
-            raise AssertionError("Email field is required.")
+            raise AssertionError("Email field is required")
         existing_user = User.query.filter_by(email=email).first()
         if existing_user and existing_user.id_user != self.id_user:
             raise AssertionError("Email already exists")

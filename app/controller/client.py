@@ -71,10 +71,14 @@ class ClientList(Resource):
                 201,
             )
         except AssertionError as exception_message:
+            db.session.rollback()
             return {"message": "{}.".format(str(exception_message))}, 400
         except TypeError as e:
             db.session.rollback()
             return {"message": str(e)}, 404
+        except Exception as e:
+            db.session.rollback()
+            return {"message": str(e)}, 500
 
 
 @ns.route("/client/<string:id_client>")
@@ -134,6 +138,9 @@ class ClientData(Resource):
         except TypeError as e:
             db.session.rollback()
             return {"message": str(e)}, 404
+        except Exception as e:
+            db.session.rollback()
+            return {"message": str(e)}, 500
 
     def delete(self, id_client):
         try:
@@ -151,3 +158,6 @@ class ClientData(Resource):
         except TypeError as e:
             db.session.rollback()
             return {"message": str(e)}, 404
+        except Exception as e:
+            db.session.rollback()
+            return {"message": str(e)}, 500
