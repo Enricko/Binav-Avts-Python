@@ -1,5 +1,6 @@
-from app.extensions import db, generate_random_string
+from app.extensions import api_handle_exception, db, generate_random_string
 from flask_restx import Resource, reqparse
+from sqlalchemy.exc import IntegrityError
 from app.api_model.kapal import (
     get_kapal_model,
     insert_client_parser,
@@ -39,21 +40,21 @@ class KapalList(Resource):
 
     @ns.expect(insert_client_parser)
     def post(self):
-        try:
-            args = insert_client_parser.parse_args()
-            call_sign = args["call_sign"]
-            id_client = args["id_client"]
-            flag = args["flag"]
-            kelas = args["kelas"]
-            builder = args["builder"]
-            year_built = args["year_built"]
-            size = args["size"]
-            status = args["status"]
-            uploaded_file = args["xml_file"]
+        args = insert_client_parser.parse_args()
+        call_sign = args["call_sign"]
+        id_client = args["id_client"]
+        flag = args["flag"]
+        kelas = args["kelas"]
+        builder = args["builder"]
+        year_built = args["year_built"]
+        size = args["size"]
+        status = args["status"]
+        uploaded_file = args["xml_file"]
 
-            # Do something with the uploaded file, for example, save it
-            allowed_extensions = {"xml", "png"}
-            if (
+        # Do something with the uploaded file, for example, save it
+        allowed_extensions = {"xml", "png"}
+        if uploaded_file is not None:
+            if(
                 "." in uploaded_file.filename
                 and uploaded_file.filename.rsplit(".", 1)[1].lower()
                 in allowed_extensions
@@ -66,6 +67,7 @@ class KapalList(Resource):
                     f"{str_datetime}_{call_sign}."
                     + uploaded_file.filename.rsplit(".", 1)[1].lower()
                 )
+                print(id_client)
 
                 # Upload Kapal
                 kapal = Kapal(
@@ -82,21 +84,17 @@ class KapalList(Resource):
 
                 db.session.add(kapal)
 
+                db.session.commit()
+
                 # File Uploaded
                 uploaded_file.save(file_path + file_name)
-
-                # db.session.commit()
+                
                 return {"message": "Kapal uploaded successfully"}
             else:
                 return {
                     "message": "Invalid file extension. Allowed extensions: .xml"
                 }, 400
-        except AssertionError as exception_message:
-            db.session.rollback()
-            return {"message": "{}.".format(str(exception_message))}, 400
-        except TypeError as e:
-            db.session.rollback()
-            return {"message": str(e)}, 404
-        except Exception as e:
-            db.session.rollback()
-            return {"message": str(e)}, 500
+        else:
+            return {
+                "message": "xml_file field is required."
+            }, 400

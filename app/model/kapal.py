@@ -35,7 +35,7 @@ class Kapal(db.Model):
         if not call_sign:
             raise AssertionError("call_sign field is required")
         existing_data = Kapal.query.filter_by(call_sign=call_sign).first()
-        if existing_data and existing_data.id_user != self.id_user:
+        if existing_data and existing_data.call_sign != self.call_sign:
             raise AssertionError("call_sign already exists")
         return call_sign
     
@@ -46,6 +46,7 @@ class Kapal(db.Model):
         existing_data = Client.query.filter_by(id_client=id_client).first()
         if existing_data is None:
             raise AssertionError("id_client doesn't exists")
+        # return id_client
         
     @validates("status")
     def validate_status(self, key, status):
