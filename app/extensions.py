@@ -1,3 +1,5 @@
+from importlib import import_module
+import os
 import random
 import string
 from flask_restx import Api
@@ -7,6 +9,7 @@ from sqlalchemy.exc import IntegrityError
 
 api = Api()
 db = SQLAlchemy()
+
 
 def generate_random_string(length):
     characters = string.ascii_letters + string.digits  # includes both uppercase and lowercase letters and digits

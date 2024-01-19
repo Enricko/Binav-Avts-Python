@@ -1,3 +1,4 @@
+from importlib import import_module
 from flask import Flask
 
 from .extensions import api, db
@@ -6,6 +7,15 @@ import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
+def import_all_modules():
+    model_folder = os.path.join(os.path.dirname(__file__), 'model')
+
+    # Dynamically import all modules in the "model" folder
+    for file in os.listdir(model_folder):
+        if file.endswith('.py') and file != '__init__.py':
+            module_name = file[:-3]
+            module = import_module(f'app.model.{module_name}')
+            globals()[module_name] = module
 
 def create_app():
     load_dotenv()
@@ -21,5 +31,10 @@ def create_app():
     db.init_app(app)
     
     api.add_namespace(ns)
+    
+    import_all_modules()
+    
+    with app.app_context():
+        db.create_all()
 
     return app

@@ -29,9 +29,8 @@ class CoordinateVTG(db.Model):
         nullable=False,
     )
     checksum = db.Column(db.String(255), nullable=False)
-    timestamps = db.Column(
-        db.TIMESTAMP, server_default=db.func.current_timestamp(), nullable=False
-    )
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     kapal = db.relationship("Kapal", backref="coordinate_vtgs", lazy=True)
 

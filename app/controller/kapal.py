@@ -1,13 +1,19 @@
+import os
 from app.extensions import api_handle_exception, db, generate_random_string
 from flask_restx import Resource, reqparse
 from sqlalchemy.exc import IntegrityError
 from app.api_model.kapal import (
     get_kapal_model,
-    insert_client_parser,
+    insert_kapal_parser,
+    update_kapal_parser,
 )
 from app.model.kapal import Kapal
 from app.resources import ns
 import datetime
+
+# Uploaded file path
+file_path = "assets/kapal/"
+
 
 # Pagination parameters
 pagination_parser = reqparse.RequestParser()
@@ -38,9 +44,10 @@ class KapalList(Resource):
             "data": kapal,
         }, 200
 
-    @ns.expect(insert_client_parser)
+    @ns.expect(insert_kapal_parser)
+    @api_handle_exception
     def post(self):
-        args = insert_client_parser.parse_args()
+        args = insert_kapal_parser.parse_args()
         call_sign = args["call_sign"]
         id_client = args["id_client"]
         flag = args["flag"]
@@ -52,7 +59,7 @@ class KapalList(Resource):
         uploaded_file = args["xml_file"]
 
         # Do something with the uploaded file, for example, save it
-        allowed_extensions = {"xml", "png"}
+        allowed_extensions = {"xml"}
         if uploaded_file is not None:
             if(
                 "." in uploaded_file.filename
@@ -62,12 +69,10 @@ class KapalList(Resource):
                 # File Name
                 current_datetime = datetime.datetime.now()
                 str_datetime = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
-                file_path = "assets/kapal/"
                 file_name = (
                     f"{str_datetime}_{call_sign}."
                     + uploaded_file.filename.rsplit(".", 1)[1].lower()
                 )
-                print(id_client)
 
                 # Upload Kapal
                 kapal = Kapal(
@@ -89,7 +94,7 @@ class KapalList(Resource):
                 # File Uploaded
                 uploaded_file.save(file_path + file_name)
                 
-                return {"message": "Kapal uploaded successfully"}
+                return {"message": "Kapal uploaded successfully."},201
             else:
                 return {
                     "message": "Invalid file extension. Allowed extensions: .xml"
@@ -98,3 +103,69 @@ class KapalList(Resource):
             return {
                 "message": "xml_file field is required."
             }, 400
+            
+@ns.route("/kapal/<string:call_sign>")
+class KapalData(Resource):
+    @ns.expect(update_kapal_parser)
+    @api_handle_exception
+    def put(self,call_sign):
+        args = update_kapal_parser.parse_args()
+        flag = args["flag"]
+        kelas = args["kelas"]
+        builder = args["builder"]
+        year_built = args["year_built"]
+        size = args["size"]
+        status = args["status"]
+        uploaded_file = args["xml_file"]
+        
+        kapal = Kapal.query.get(call_sign)
+        
+        kapal.flag = flag
+        kapal.kelas = kelas
+        kapal.builder = builder
+        kapal.year_built = year_built
+        kapal.size = size
+        kapal.status = status
+
+        # Do something with the uploaded file, for example, save it
+        allowed_extensions = {"xml"}
+        if uploaded_file is not None:
+            if(
+                "." in uploaded_file.filename
+                and uploaded_file.filename.rsplit(".", 1)[1].lower()
+                in allowed_extensions
+            ):
+                # File Name
+                current_datetime = datetime.datetime.now()
+                str_datetime = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
+                file_name = (
+                    f"{str_datetime}_{call_sign}."
+                    + uploaded_file.filename.rsplit(".", 1)[1].lower()
+                )
+                
+                if os.path.exists(f"{file_path}{kapal.xml_file}"):
+                    os.remove(f"{file_path}{kapal.xml_file}")
+                kapal.xml_file = file_name
+
+                db.session.commit()
+                # File Uploaded
+                uploaded_file.save(file_path + file_name)
+                
+                return {"message": "Kapal updated successfully."},201
+            else:
+                return {
+                    "message": "Invalid file extension. Allowed extensions: .xml"
+                }, 400
+        else:
+            db.session.commit()
+            return {"message": "Kapal updated successfully."}
+
+    @api_handle_exception
+    def delete(self,call_sign):
+        kapal = Kapal.query.get(call_sign)
+        db.session.delete(kapal)
+        db.session.commit()
+        if os.path.exists(f"{file_path}{kapal.xml_file}"):
+            os.remove(f"{file_path}{kapal.xml_file}")
+        return {"message": "Client successfully deleted."}, 201
+        

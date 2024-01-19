@@ -14,9 +14,8 @@ class User(db.Model):
     password_string = db.Column(db.String(255), nullable=False)
     level = db.Column(db.Enum("client", "admin", "owner"), nullable=False)
     remember_token = db.Column(db.String(100), nullable=True)
-    timestamps = db.Column(
-        db.TIMESTAMP, server_default=db.func.current_timestamp(), nullable=False
-    )
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     @validates("email")
     def validate_email(self, key, email):

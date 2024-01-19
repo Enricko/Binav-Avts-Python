@@ -24,9 +24,8 @@ class Kapal(db.Model):
     )  # Assuming the year is a 4-digit string
     size = db.Column(db.Enum("small", "medium", "large", "extra_large"), nullable=False)
     xml_file = db.Column(db.Text, nullable=False)
-    timestamps = db.Column(
-        db.TIMESTAMP, server_default=db.func.current_timestamp(), nullable=False
-    )
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     client = db.relationship("Client", backref="kapals", lazy=True)
     
@@ -46,7 +45,7 @@ class Kapal(db.Model):
         existing_data = Client.query.filter_by(id_client=id_client).first()
         if existing_data is None:
             raise AssertionError("id_client doesn't exists")
-        # return id_client
+        return id_client
         
     @validates("status")
     def validate_status(self, key, status):

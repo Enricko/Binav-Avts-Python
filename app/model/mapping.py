@@ -13,9 +13,8 @@ class Mapping(db.Model):
     name = db.Column(db.String(255), nullable=False)
     file = db.Column(db.Text, nullable=False)
     switch = db.Column(db.Boolean, nullable=False)
-    timestamps = db.Column(
-        db.TIMESTAMP, server_default=db.func.current_timestamp(), nullable=False
-    )
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     client = db.relationship("Client", backref="mappings", lazy=True)
 

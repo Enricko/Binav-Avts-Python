@@ -15,8 +15,7 @@ kapal_model = api.model(
         "status": fields.Boolean,
         "xml_file": fields.Url,
         "year_built": fields.String,
-        "created_at": fields.DateTime,
-        "updated_at": fields.DateTime
+        "timestamps": fields.DateTime,
     }
 )
 
@@ -32,14 +31,24 @@ get_kapal_model = api.model(
     },
 )
 
-insert_client_parser = reqparse.RequestParser()
-insert_client_parser.add_argument("call_sign", type=str)
-insert_client_parser.add_argument("id_client", type=str)
-insert_client_parser.add_argument("flag", type=str)
-insert_client_parser.add_argument("kelas", type=str)
-insert_client_parser.add_argument("builder", type=str)
-insert_client_parser.add_argument("year_built", type=str)
-insert_client_parser.add_argument("size", type=str,choices=('small', 'medium', 'large', 'extra_large'))
-insert_client_parser.add_argument("builder", type=str)
-insert_client_parser.add_argument("xml_file", type=werkzeug.datastructures.FileStorage, location='files')
-insert_client_parser.add_argument("status", type=bool)
+insert_kapal_parser = reqparse.RequestParser()
+insert_kapal_parser.add_argument("call_sign", type=str)
+insert_kapal_parser.add_argument("id_client", type=str)
+insert_kapal_parser.add_argument("flag", type=str)
+insert_kapal_parser.add_argument("kelas", type=str)
+insert_kapal_parser.add_argument("builder", type=str)
+insert_kapal_parser.add_argument("year_built", type=str)
+insert_kapal_parser.add_argument("size", type=str,choices=('small', 'medium', 'large', 'extra_large'))
+insert_kapal_parser.add_argument("builder", type=str)
+insert_kapal_parser.add_argument("xml_file", type=werkzeug.datastructures.FileStorage, location='files')
+insert_kapal_parser.add_argument("status", type=bool)
+
+update_kapal_parser = reqparse.RequestParser()
+update_kapal_parser.add_argument("flag", type=str)
+update_kapal_parser.add_argument("kelas", type=str)
+update_kapal_parser.add_argument("builder", type=str)
+update_kapal_parser.add_argument("year_built", type=str)
+update_kapal_parser.add_argument("size", type=str,choices=('small', 'medium', 'large', 'extra_large'))
+update_kapal_parser.add_argument("builder", type=str)
+update_kapal_parser.add_argument("xml_file", type=werkzeug.datastructures.FileStorage, location='files')
+update_kapal_parser.add_argument("status", type=bool)
