@@ -1,5 +1,7 @@
 from app.extensions import db
+from sqlalchemy.orm import validates
 
+from app.model.client import Client
 
 class Mapping(db.Model):
     __tablename__ = "mappings"
@@ -17,6 +19,27 @@ class Mapping(db.Model):
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
     client = db.relationship("Client", backref="mappings", lazy=True)
+    
+    @validates("id_client")
+    def validate_id_client(self,key,id_client):
+        if not id_client:
+            raise AssertionError("id_client field is required")
+        existing_data = Client.query.filter_by(id_client=id_client).first()
+        if existing_data is None:
+            raise AssertionError("id_client doesn't exists")
+        return id_client
+    
+    @validates("name")
+    def validate_name(self, key, name):
+        if not name:
+            raise AssertionError("Name field is required")
+        return name
+    
+    @validates("file")
+    def validate_file(self, key, file):
+        if not file:
+            raise AssertionError("file field is required")
+        return file
 
     def __repr__(self):
         return f"<Mapping(id_mapping={self.id_mapping}, id_client={self.id_client}, name={self.name}, switch={self.switch}, timestamps={self.timestamps})>"

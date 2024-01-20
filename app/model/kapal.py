@@ -1,4 +1,3 @@
-import re
 from app.extensions import db
 from sqlalchemy.orm import validates
 

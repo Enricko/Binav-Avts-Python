@@ -1,7 +1,7 @@
 from app.model.user import User
 from flask_restx import Resource, reqparse
 from app.api_model.user import user_model
-from ..resources import ns
+from app.resources import ns
 
 @ns.route("/hello")
 class Hello(Resource):

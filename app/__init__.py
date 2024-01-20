@@ -6,7 +6,22 @@ from .resources import ns
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
+import time
+from app.controller.socket import socketrun1second
 
+import schedule
+from threading import Thread
+
+
+def scheduled_job():
+    schedule.every(1).minute.do(socketrun1second)
+    while True:
+        try:
+            schedule.run_pending()
+            time.sleep(1)
+        except KeyboardInterrupt:
+            print("\nCtrl+C detected. Exiting the loop.")
+            break
 
 def import_all_modules():
     model_folder = os.path.join(os.path.dirname(__file__), "model")
@@ -41,5 +56,7 @@ def create_app():
 
     with app.app_context():
         db.create_all()
-
+        
+    # Thread(target=scheduled_job).start()
+    
     return app

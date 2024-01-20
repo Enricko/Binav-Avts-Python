@@ -107,6 +107,7 @@ class KapalList(Resource):
             
 @ns.route("/kapal/<string:call_sign>")
 class KapalData(Resource):
+    @ns.marshal_list_with(get_kapal_model)
     @api_handle_exception
     def get(self,call_sign):
         kapal = Kapal.query.get(call_sign)
@@ -134,9 +135,6 @@ class KapalData(Resource):
         uploaded_file = args["xml_file"]
         
         kapal = Kapal.query.get(call_sign)
-        
-        # if(kapal is None):
-        #     return {"message":"Kapal not found"},404
         
         kapal.call_sign = new_call_sign
         kapal.flag = flag
@@ -177,7 +175,7 @@ class KapalData(Resource):
                 }, 400
         else:
             db.session.commit()
-            return {"message": "Kapal updated successfully."}
+            return {"message": "Kapal updated successfully."},201
 
     @api_handle_exception
     def delete(self,call_sign):
@@ -186,5 +184,5 @@ class KapalData(Resource):
         db.session.commit()
         if os.path.exists(f"{file_path}{kapal.xml_file}"):
             os.remove(f"{file_path}{kapal.xml_file}")
-        return {"message": "Client successfully deleted."}, 201
+        return {"message": "Kapal successfully deleted."}, 201
         

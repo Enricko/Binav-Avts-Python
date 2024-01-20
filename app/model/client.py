@@ -15,7 +15,7 @@ class Client(db.Model):
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
 
-    user = db.relationship("User", backref="client", lazy=True)
+    user = db.relationship("User", backref="client", lazy=False)
     
     @validates("status")
     def validate_status(self, key, status):

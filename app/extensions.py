@@ -37,6 +37,6 @@ def api_handle_exception(func):
             db.session.rollback()
             return {"message": str(e)}, 500
         finally:
-            db.session.close()
+            db.session.remove()
             
     return wrapper

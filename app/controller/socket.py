@@ -1,9 +1,10 @@
+from flask_socketio import emit
 from app.extensions import socketio
 import datetime
 
 def socketrun1second():
     print("asdasasd")
-    socketio.emit("message",f"{datetime.datetime.now()}")
+    emit("message",f"{datetime.datetime.now()}")
 
 @socketio.on("connect")
 def handle_connect():
@@ -11,5 +12,5 @@ def handle_connect():
 
 @socketio.on('message')
 def handle_message(msg):
-    print('Message:', msg)
-    socketio.emit('message', msg)
+    emit('message', msg,broadcast=True)
+    emit('message', msg+"asd",broadcast=False)
