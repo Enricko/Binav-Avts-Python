@@ -25,6 +25,7 @@ pagination_parser.add_argument("per_page", type=int, help="Items per page", defa
 class KapalList(Resource):
     @ns.marshal_list_with(get_kapal_model)
     @ns.expect(pagination_parser)
+    @api_handle_exception
     def get(self):
         args = pagination_parser.parse_args()
         page = args["page"]
@@ -106,10 +107,24 @@ class KapalList(Resource):
             
 @ns.route("/kapal/<string:call_sign>")
 class KapalData(Resource):
+    @api_handle_exception
+    def get(self,call_sign):
+        kapal = Kapal.query.get(call_sign)
+
+        return {
+            "message": "Data Kapal Ditemukan",
+            "status": 200,
+            "page": 1,
+            "perpage": 1,
+            "total": 1,
+            "data": kapal,
+        }, 200
+        
     @ns.expect(update_kapal_parser)
     @api_handle_exception
     def put(self,call_sign):
         args = update_kapal_parser.parse_args()
+        new_call_sign = args["new_call_sign"]
         flag = args["flag"]
         kelas = args["kelas"]
         builder = args["builder"]
@@ -120,6 +135,10 @@ class KapalData(Resource):
         
         kapal = Kapal.query.get(call_sign)
         
+        # if(kapal is None):
+        #     return {"message":"Kapal not found"},404
+        
+        kapal.call_sign = new_call_sign
         kapal.flag = flag
         kapal.kelas = kelas
         kapal.builder = builder

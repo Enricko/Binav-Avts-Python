@@ -1,6 +1,8 @@
 dotenv
 flask
 flask-restx
+flask_socketio
 flask-sqlalchemy
 flask-jwt-extended
 mysql-connector-python
+schedule

@@ -1,6 +1,5 @@
-from importlib import import_module
-import os
 import random
+from flask_socketio import SocketIO
 import string
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
@@ -9,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 api = Api()
 db = SQLAlchemy()
+socketio = SocketIO()
 
 
 def generate_random_string(length):
@@ -27,9 +27,12 @@ def api_handle_exception(func):
         except TypeError as e:
             db.session.rollback()
             return {"message": str(e)}, 404
+        except AttributeError as e:  # noqa: F841
+            db.session.rollback()
+            return {"message": "Data not found"}, 404
         except IntegrityError as e:
             db.session.rollback()
-            return {"message": str(e)+"asdasd"}, 500
+            return {"message": str(e)}, 500
         except Exception as e:
             db.session.rollback()
             return {"message": str(e)}, 500

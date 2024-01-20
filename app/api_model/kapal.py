@@ -13,9 +13,10 @@ kapal_model = api.model(
         "builder": fields.String,
         "size": fields.String,
         "status": fields.Boolean,
-        "xml_file": fields.Url,
+        "xml_file": fields.String,
         "year_built": fields.String,
-        "timestamps": fields.DateTime,
+        "created_at": fields.DateTime,
+        "updated_at": fields.DateTime,
     }
 )
 
@@ -44,6 +45,7 @@ insert_kapal_parser.add_argument("xml_file", type=werkzeug.datastructures.FileSt
 insert_kapal_parser.add_argument("status", type=bool)
 
 update_kapal_parser = reqparse.RequestParser()
+update_kapal_parser.add_argument("new_call_sign", type=str)
 update_kapal_parser.add_argument("flag", type=str)
 update_kapal_parser.add_argument("kelas", type=str)
 update_kapal_parser.add_argument("builder", type=str)

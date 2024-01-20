@@ -20,6 +20,7 @@ pagination_parser.add_argument("per_page", type=int, help="Items per page", defa
 class ClientList(Resource):
     @ns.marshal_list_with(get_client_model)
     @ns.expect(pagination_parser)
+    # @api_handle_exception
     def get(self):
         args = pagination_parser.parse_args()
         page = args["page"]
@@ -77,6 +78,7 @@ class ClientList(Resource):
 class ClientData(Resource):
     
     @ns.marshal_list_with(get_client_model)
+    @api_handle_exception
     def get(self,id_client):
 
         total_count = Client.query.count()
