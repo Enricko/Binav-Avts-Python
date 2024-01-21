@@ -185,4 +185,5 @@ class KapalData(Resource):
         if os.path.exists(f"{file_path}{kapal.xml_file}"):
             os.remove(f"{file_path}{kapal.xml_file}")
         return {"message": "Kapal successfully deleted."}, 201
+    
         
