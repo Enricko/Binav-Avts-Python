@@ -136,6 +136,9 @@ class KapalData(Resource):
         
         kapal = Kapal.query.get(call_sign)
         
+        if kapal is None:
+            raise TypeError("Kapal not found")
+        
         kapal.call_sign = new_call_sign
         kapal.flag = flag
         kapal.kelas = kelas
@@ -180,10 +183,13 @@ class KapalData(Resource):
     @api_handle_exception
     def delete(self,call_sign):
         kapal = Kapal.query.get(call_sign)
-        db.session.delete(kapal)
-        db.session.commit()
-        if os.path.exists(f"{file_path}{kapal.xml_file}"):
-            os.remove(f"{file_path}{kapal.xml_file}")
-        return {"message": "Kapal successfully deleted."}, 201
+        if kapal:
+            db.session.delete(kapal)
+            db.session.commit()
+            if os.path.exists(f"{file_path}{kapal.xml_file}"):
+                os.remove(f"{file_path}{kapal.xml_file}")
+            return {"message": "Kapal successfully deleted."}, 201
+        return {"message": "Kapal not found."}, 404
+
     
         

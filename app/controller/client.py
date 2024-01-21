@@ -129,9 +129,12 @@ class ClientData(Resource):
     @api_handle_exception
     def delete(self, id_client):
         client = Client.query.get(id_client)
-        user = User.query.get(client.id_user)
-        db.session.delete(client)
-        db.session.delete(user)
-        db.session.commit()
+        if client:
+            user = User.query.get(client.id_user)
+            db.session.delete(client)
+            db.session.delete(user)
+            db.session.commit()
 
-        return {"message": "Client successfully deleted."}, 201
+            return {"message": "Client successfully deleted."}, 201
+        return {"message": "Client not found."}, 404
+    

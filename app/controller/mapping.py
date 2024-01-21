@@ -107,13 +107,16 @@ class MappingData(Resource):
         
     @ns.expect(update_mapping_parser)
     @api_handle_exception
-    def post(self,id_mapping):
+    def put(self,id_mapping):
         args = insert_mapping_parser.parse_args()
         name = args["name"]
         switch = args["switch"]
         uploaded_file = args["file"]
         
         mapping = Mapping.query.get(id_mapping)
+        
+        if mapping is None:
+            raise TypeError("Mapping not found")
         
         mapping.name = name
         mapping.switch = switch
@@ -155,8 +158,11 @@ class MappingData(Resource):
     @api_handle_exception
     def delete(self,id_mapping):
         mapping = Mapping.query.get(id_mapping)
-        db.session.delete(mapping)
-        db.session.commit()
-        if os.path.exists(f"{file_path}{mapping.file}"):
-            os.remove(f"{file_path}{mapping.file}")
-        return {"message": "Mapping successfully deleted."}, 201
+        if mapping:
+            db.session.delete(mapping)
+            db.session.commit()
+            if os.path.exists(f"{file_path}{mapping.file}"):
+                os.remove(f"{file_path}{mapping.file}")
+            return {"message": "Mapping successfully deleted."}, 201
+        return {"message": "Mapping not found."}, 404
+    
