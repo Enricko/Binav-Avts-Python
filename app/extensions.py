@@ -1,11 +1,12 @@
 import random
+from flask import Flask
 from flask_socketio import SocketIO
 import string
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 
-
+app = Flask(__name__)
 api = Api()
 db = SQLAlchemy()
 socketio = SocketIO()
@@ -36,7 +37,7 @@ def api_handle_exception(func):
         except Exception as e:
             db.session.rollback()
             return {"message": str(e)}, 500
-        finally:
-            db.session.remove()
+        # finally:
+        #     db.session.remove()
             
     return wrapper

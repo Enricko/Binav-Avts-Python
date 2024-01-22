@@ -1,20 +1,24 @@
-from flask import json, jsonify
+from flask import json, jsonify,current_app
 from flask_socketio import emit
-from app.extensions import api_handle_exception, socketio
+from app.extensions import api_handle_exception, socketio, db,app
 from marshmallow import Schema
 import datetime
+from app.model.coordinate_gga import CoordinateGGA
+from app.model.coordinate_hdt import CoordinateHDT
+from app.model.coordinate_vtg import CoordinateVTG
 
 from app.model.kapal import Kapal
 
 
 def socketrun1second():
-    print("asdasasd")
-    emit("message", f"{datetime.datetime.now()}")
+    with app.app_context():
+        socketio.emit("kapal_coor",kapal_coor_data())
 
 
 @socketio.on("connect")
 def handle_connect():
     print("Client connected")
+    emit("kapal_coor", kapal_coor_data(),broadcast=False)
 
 
 @socketio.on("message")
@@ -22,45 +26,46 @@ def handle_message(msg):
     emit("message", msg, broadcast=True)
     emit("message", msg + "asd", broadcast=False)
 
-
-class KapalSchema(Schema):
-    class Meta:
-        model = Kapal
-
-
 @socketio.on("kapal_coordinate")
-@api_handle_exception
 def handle_kapal_coordinate(payload):
-    # Type = ["global","filter"]
-    type = payload.get("type", "").lower()
+    emit("kapal_coor", kapal_coor_data(payload), broadcast=True)
+
+
+# @api_handle_exception
+def kapal_coor_data(payload = {}):
+    call_sign = payload.get("call_sign", None)
     page = payload.get("page", 1)
-    perpage = payload.get("perpage", 10)
-    kapal = Kapal.query.all()
-    # print([e.serialize() for e in kapal])
-    # emit('message', [eserialize() for e in kapal],broadcast=True)
+    perpage = payload.get("perpage", 100)
+    offset = (page - 1) * perpage
+        
+    kapal_coor = db.session.query(Kapal, CoordinateGGA,CoordinateHDT,CoordinateVTG).outerjoin(CoordinateGGA).outerjoin(CoordinateHDT).outerjoin(CoordinateVTG)
+    kapal_coor_page = kapal_coor.offset(offset).limit(perpage)
 
     data_json = {
         "message": "Data di temukan",
         "status": 200,
         "perpage": perpage,
         "page": page,
-        "total": len(kapal),
+        "total": kapal_coor.count(),
         "data": [
             {
-                "id_client": x.id_client,
-                "call_sign": x.call_sign,
-                "flag": x.flag,
-                "kelas": x.kelas,
-                "builder": x.builder,
-                "size": x.size,
-                "status": x.status,
-                "xml_file": x.xml_file,
-                "year_built": x.year_built,
-                "created_at": str(x.created_at),
-                "updated_at": str(x.updated_at),
+                "id_client": getattr(kapal,"id_client",None),
+                "call_sign": getattr(kapal,"call_sign",None),
+                "flag": getattr(kapal,"flag",None),
+                "kelas": getattr(kapal,"kelas",None),
+                "size": getattr(kapal,"size",None),
+                "status": getattr(kapal,"status",None),
+                "coor_gga":{
+                    "id_coor_gga":getattr(coor_gga,"id_coor_gga",None),
+                    "latitude": getattr(coor_gga,"latitude",None),
+                    "longitude": getattr(coor_gga,"longitude",None),
+                },
+                "coor_hdt":{
+                    "id_coor_hdt":getattr(coor_hdt,"id_coor_hdt",None),
+                    "heading_degree":getattr(coor_hdt,"heading_degree",None)
+                }
             }
-            for x in kapal
+            for kapal,coor_gga,coor_hdt,coor_vtg in (kapal_coor_page.all() if call_sign is None else kapal_coor.filter(Kapal.call_sign == call_sign).all())
         ],
     }
-
-    emit("message", data_json, broadcast=True)
+    return data_json
