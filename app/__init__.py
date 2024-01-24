@@ -6,7 +6,7 @@ from flask import Flask
 from app.controller.socket import kapal_coor_data, socketrun1second
 
 # Import extensions and resources from the current package
-from .extensions import api, db, socketio, app
+from .extensions import api, db, socketio, app, scheduler
 from .resources import ns
 
 # Import standard libraries and third-party packages
@@ -19,6 +19,7 @@ import time
 import schedule
 from threading import Thread
 
+
 # Define a scheduled job that runs socketrun1second every 5 seconds
 def scheduled_job():
     schedule.every(5).seconds.do(socketrun1second)
@@ -29,6 +30,7 @@ def scheduled_job():
         except KeyboardInterrupt:
             print("\nCtrl+C detected. Exiting the loop.")
             break
+
 
 # Dynamically import all modules in the "model" folder
 def import_all_modules():
@@ -42,6 +44,7 @@ def import_all_modules():
             module = import_module(f"app.model.{module_name}")
             # Make the module accessible globally
             globals()[module_name] = module
+
 
 # Create a Flask application
 def create_app():
@@ -63,6 +66,7 @@ def create_app():
     api.init_app(app)
     db.init_app(app)
     socketio.init_app(app)
+    scheduler.start()
 
     # Add Flask-RESTful namespace
     api.add_namespace(ns)

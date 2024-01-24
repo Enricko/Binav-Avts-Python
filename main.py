@@ -1,6 +1,8 @@
-from app import create_app, socketio
+import atexit
+from app import create_app, socketio,scheduler
 
 app = create_app()
+atexit.register(lambda: scheduler.shutdown())
 
 socketio.run(app, debug=True)
 

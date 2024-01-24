@@ -5,11 +5,13 @@ import string
 from flask_restx import Api
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
+from apscheduler.schedulers.background import BackgroundScheduler
 
 app = Flask(__name__)
 api = Api()
 db = SQLAlchemy()
 socketio = SocketIO()
+scheduler = BackgroundScheduler()
 
 
 def generate_random_string(length):
