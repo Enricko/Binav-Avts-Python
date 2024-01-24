@@ -1,12 +1,11 @@
 # Import necessary modules
 from importlib import import_module
 from flask import Flask
-
 # Import specific functions from custom modules
 from app.controller.socket import kapal_coor_data, socketrun1second
 
 # Import extensions and resources from the current package
-from .extensions import api, db, socketio, app, scheduler
+from .extensions import api, db, jwt, socketio, app, scheduler
 from .resources import ns
 
 # Import standard libraries and third-party packages
@@ -65,6 +64,7 @@ def create_app():
     # Initialize Flask extensions
     api.init_app(app)
     db.init_app(app)
+    jwt.init_app(app)
     socketio.init_app(app)
     scheduler.start()
 

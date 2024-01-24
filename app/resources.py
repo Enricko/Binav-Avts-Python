@@ -3,7 +3,10 @@ ns = api.namespace("api")
 # Route to user
 # import app.controller.user  # noqa: E402
 
-# Route to user
+# Route to auth
+import app.controller.auth  # noqa: E402
+
+# Route to kapal
 import app.controller.kapal  # noqa: E402
 
 # Route to client

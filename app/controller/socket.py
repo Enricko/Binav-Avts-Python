@@ -1,9 +1,6 @@
-from flask import json, jsonify, request
+from flask import request
 from flask_socketio import emit, join_room, leave_room
 from app.extensions import socketio, db, app, scheduler
-from marshmallow import Schema
-from apscheduler.schedulers.background import BackgroundScheduler
-import datetime
 from app.model.coordinate_gga import CoordinateGGA
 from app.model.coordinate_hdt import CoordinateHDT
 from app.model.coordinate_vtg import CoordinateVTG
@@ -85,7 +82,6 @@ def kapal_coor_data(payload={}):
     perpage = payload.get("perpage", 100)
     offset = (page - 1) * perpage
 
-    # kapal_coor = db.session.query(Kapal, CoordinateGGA,CoordinateHDT,CoordinateVTG).outerjoin(CoordinateGGA).outerjoin(CoordinateHDT).outerjoin(CoordinateVTG)
     latest_series_id_subquery = (
         db.session.query(
             Coordinate.call_sign,
