@@ -1,11 +1,11 @@
 # Import necessary modules
 from importlib import import_module
-from flask import Flask
+
 # Import specific functions from custom modules
-from app.controller.socket import kapal_coor_data, socketrun1second
+from app.controller.socket import socketrun1second
 
 # Import extensions and resources from the current package
-from .extensions import api, db, jwt, socketio, app, scheduler
+from .extensions import api, db, jwt, mail, socketio, app, scheduler
 from .resources import ns
 
 # Import standard libraries and third-party packages
@@ -16,7 +16,6 @@ import time
 
 # Import scheduling-related modules
 import schedule
-from threading import Thread
 
 
 # Define a scheduled job that runs socketrun1second every 5 seconds
@@ -60,11 +59,19 @@ def create_app():
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(
         seconds=int(os.getenv("JWT_EXPIRE_TOKEN", 4800))
     )
+    app.config["MAIL_SERVER"] = os.getenv("MAIL_SERVER")
+    app.config["MAIL_PORT"] = os.getenv("MAIL_PORT")
+    app.config["MAIL_USE_SSL"] = os.getenv("MAIL_USE_SSL")
+    app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
+    app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
+    app.config["MAIL_DEFAULT_SENDER"] = os.getenv("MAIL_DEFAULT_SENDER")
+    app.config["MAIL_DEBUG"] = os.getenv("MAIL_DEBUG")
 
     # Initialize Flask extensions
     api.init_app(app)
     db.init_app(app)
     jwt.init_app(app)
+    mail.init_app(app)
     socketio.init_app(app)
     scheduler.start()
 

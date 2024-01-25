@@ -7,3 +7,5 @@ flask-jwt-extended
 mysql-connector-python
 schedule
 apscheduler
+Flask-Mail
+pyotp

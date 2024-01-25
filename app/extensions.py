@@ -4,6 +4,7 @@ from flask_jwt_extended import JWTManager
 from flask_socketio import SocketIO
 import string
 from flask_restx import Api
+from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from apscheduler.schedulers.background import BackgroundScheduler
@@ -12,6 +13,7 @@ app = Flask(__name__)
 api = Api()
 db = SQLAlchemy()
 jwt = JWTManager()
+mail = Mail()
 socketio = SocketIO()
 scheduler = BackgroundScheduler()
 
@@ -55,15 +57,18 @@ BLOCKLIST = set()
 
 # Error Handler
 
+
 @api_handle_exception
 @jwt.expired_token_loader
 def expired_token_response(jwt_header, jwt_payload):
     return jsonify({"message": "Token has expired"}), 401
 
+
 @api_handle_exception
 @jwt.invalid_token_loader
 def invalid_token_response(callback):
     return jsonify({"message": "Invalid token"}), 401
+
 
 @api_handle_exception
 @jwt.unauthorized_loader
