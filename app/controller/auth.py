@@ -1,3 +1,4 @@
+import datetime
 import os
 import pyotp
 import random
@@ -12,7 +13,12 @@ from flask_jwt_extended import (
 )
 from app.model.reset_code_password import ResetCodePassword
 from app.model.user import User
-from app.api_model.user import get_user_auth_model,otp_parser,otp_code_check_parser
+from app.api_model.user import (
+    get_user_auth_model,
+    otp_parser,
+    otp_code_check_parser,
+    reset_password_parser,
+)
 from flask_restx import Resource, reqparse
 from app.resources import ns
 from flask_mail import Message
@@ -52,6 +58,7 @@ class AuthLogin(Resource):
                 "status": 404,
             }, 404
 
+
 @ns.route("/user")
 class AuthGet(Resource):
     @ns.marshal_list_with(get_user_auth_model)
@@ -66,6 +73,7 @@ class AuthGet(Resource):
             "data": user,
         }, 200
 
+
 @ns.route("/logout")
 class AuthLogout(Resource):
     @jwt_required()
@@ -77,20 +85,22 @@ class AuthLogout(Resource):
             "message": "Successfully logged out.",
             "status": 200,
         }, 200
-        
-@ns.route('/forgot-password')
-class ForgotPasswordResource(Resource):
+
+
+@ns.route("/forgot-password")
+class ForgotPassword(Resource):
     @ns.expect(otp_parser)
+    @api_handle_exception
     def post(self):
         args = otp_parser.parse_args()
 
-        email = args['email']
+        email = args["email"]
         user = User.query.filter_by(email=email).first()
 
         if user:
             # Generate OTP
-            otp_secret = ''.join(random.choices(string.digits, k=6))
-            
+            otp_secret = "".join(random.choices(string.digits, k=6))
+
             oldResetCodePassword = ResetCodePassword.query.get(email)
             if oldResetCodePassword:
                 db.session.delete(oldResetCodePassword)
@@ -104,31 +114,68 @@ class ForgotPasswordResource(Resource):
             db.session.commit()
 
             # Send OTP via email
-            msg = Message('Forgot Password OTP', sender=os.getenv("MAIL_USERNAME"), recipients=[email])
-            msg.html = render_template('otp_email.html', user=user, code=otp_secret)
+            msg = Message(
+                "Forgot Password OTP",
+                sender=os.getenv("MAIL_USERNAME"),
+                recipients=[email],
+            )
+            msg.html = render_template("otp_email.html", user=user, code=otp_secret)
             mail.send(msg)
 
-            return {'message': f"OTP sent successfully {otp_secret}"},200
+            return {"message": f"OTP sent successfully {otp_secret}"}, 200
         else:
-            return {'error': 'User not found'}, 404
+            return {"error": "User not found"}, 404
 
-def check_otp(user, otp_value):
-    if user and user.code:
-        otp = pyotp.TOTP(user.code)
-        return otp.verify(otp_value)
-    return False
 
-@ns.route('/check-code')
-class CheckCodeResource(Resource):
+@ns.route("/check-code")
+class CheckCode(Resource):
     @ns.expect(otp_code_check_parser)
+    @api_handle_exception
     def post(self):
         args = otp_code_check_parser.parse_args()
 
-        email = args['email']
-        otp_code = args['otp_code']
+        email = args["email"]
+        otp_code = args["otp_code"]
         resetCodePassword = ResetCodePassword.query.filter_by(email=email).first()
-        
-        if resetCodePassword.code == otp_code:
-            return {'message': 'OTP verification successful'},200
+
+        if resetCodePassword and resetCodePassword.code == otp_code:
+            if resetCodePassword.created_at < resetCodePassword.created_at + datetime.timedelta(minutes=15):
+                return {"message": "OTP verification successful"}, 200
+            else:
+                db.session.delete(resetCodePassword)
+                db.session.commit()
+                return {"message": "OTP Expired"}, 201
         else:
-            return {'error': 'Invalid OTP'}, 400
+            return {"message": "Invalid OTP"}, 400
+
+
+@ns.route("/reset-password")
+class ResetPassword(Resource):
+    @ns.expect(reset_password_parser)
+    @api_handle_exception
+    def post(self):
+        args = reset_password_parser.parse_args()
+
+        email = args["email"]
+        otp_code = args["otp_code"]
+        password = args["password"]
+        password_confirmation = args["password_confirmation"]
+        resetCodePassword = ResetCodePassword.query.filter_by(email=email).first()
+
+        if resetCodePassword and resetCodePassword.code == otp_code:
+            if resetCodePassword.created_at < resetCodePassword.created_at + datetime.timedelta(minutes=15):
+                user = User.query.filter_by(email=email).first()
+
+                user.password_string = f"{user.name}-{password}-{email}"
+                user.set_password(password, password_confirmation)
+                db.session.delete(resetCodePassword)
+
+                db.session.commit()
+
+                return {"message": "Reset Password successful."}, 200
+            else:
+                db.session.delete(resetCodePassword)
+                db.session.commit()
+                return {"message": "OTP Expired."}, 201
+        else:
+            return {"message": "Invalid OTP."}, 400

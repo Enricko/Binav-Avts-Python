@@ -45,6 +45,8 @@ class User(db.Model):
     def set_password(self, password,password_confirmation):
         if not password:
             raise AssertionError("Password field is required")
+        if not password_confirmation:
+            raise AssertionError("Password Confirmation field is required")
         if len(password) < 8 or len(password) > 50:
             raise AssertionError("Password must contain at least 8")
         if password != password_confirmation:
