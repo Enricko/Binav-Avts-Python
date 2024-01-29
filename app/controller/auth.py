@@ -53,6 +53,7 @@ class AuthLogin(Resource):
                     "status": 401,
                 }, 401
         else:
+            print("Email123")
             return {
                 "message": "Email not found.",
                 "status": 404,
@@ -122,9 +123,9 @@ class ForgotPassword(Resource):
             msg.html = render_template("otp_email.html", user=user, code=otp_secret)
             mail.send(msg)
 
-            return {"message": f"OTP sent successfully {otp_secret}"}, 200
+            return {"message": "OTP sent successfully.", "status": 200}, 200
         else:
-            return {"error": "User not found"}, 404
+            return {"error": "User not found.","status":404}, 404
 
 
 @ns.route("/check-code")
@@ -139,14 +140,17 @@ class CheckCode(Resource):
         resetCodePassword = ResetCodePassword.query.filter_by(email=email).first()
 
         if resetCodePassword and resetCodePassword.code == otp_code:
-            if resetCodePassword.created_at < resetCodePassword.created_at + datetime.timedelta(minutes=15):
-                return {"message": "OTP verification successful"}, 200
+            if (
+                resetCodePassword.created_at
+                < resetCodePassword.created_at + datetime.timedelta(minutes=15)
+            ):
+                return {"message": "OTP verification successful.", "status": 200}, 200
             else:
                 db.session.delete(resetCodePassword)
                 db.session.commit()
-                return {"message": "OTP Expired"}, 201
+                return {"message": "OTP Expired.", "status": 403}, 403
         else:
-            return {"message": "Invalid OTP"}, 400
+            return {"message": "Invalid OTP.", "status": 400}, 400
 
 
 @ns.route("/reset-password")
@@ -163,7 +167,10 @@ class ResetPassword(Resource):
         resetCodePassword = ResetCodePassword.query.filter_by(email=email).first()
 
         if resetCodePassword and resetCodePassword.code == otp_code:
-            if resetCodePassword.created_at < resetCodePassword.created_at + datetime.timedelta(minutes=15):
+            if (
+                resetCodePassword.created_at
+                < resetCodePassword.created_at + datetime.timedelta(minutes=15)
+            ):
                 user = User.query.filter_by(email=email).first()
 
                 user.password_string = f"{user.name}-{password}-{email}"
@@ -172,10 +179,10 @@ class ResetPassword(Resource):
 
                 db.session.commit()
 
-                return {"message": "Reset Password successful."}, 200
+                return {"message": "Reset Password successful.", "status": 200}, 200
             else:
                 db.session.delete(resetCodePassword)
                 db.session.commit()
-                return {"message": "OTP Expired."}, 201
+                return {"message": "OTP Expired.", "status": 201}, 201
         else:
-            return {"message": "Invalid OTP."}, 400
+            return {"message": "Invalid OTP.", "status": 400}, 400

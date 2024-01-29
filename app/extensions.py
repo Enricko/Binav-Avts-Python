@@ -33,19 +33,39 @@ def api_handle_exception(func):
             return result
         except AssertionError as exception_message:
             db.session.rollback()
-            return {"message": "{}.".format(str(exception_message))}, 400
+            print(str(exception_message))
+            return {
+                "message": "{}.".format(str(exception_message)),
+                "status": 400,
+            }, 400
         except TypeError as e:
             db.session.rollback()
-            return {"message": str(e)}, 404
+            print(str(e))
+            return {
+                "message": str(e),
+                "status.": 404,
+            }, 404
         except AttributeError as e:  # noqa: F841
             db.session.rollback()
-            return {"message": "Data not found"}, 404
+            print(str(e))
+            return {
+                "message": "Data not found.",
+                "status": 400,
+            }, 404
         except IntegrityError as e:
             db.session.rollback()
-            return {"message": str(e)}, 500
+            print(str(e))
+            return {
+                "message": f"{str(e)}.",
+                "status": 500,
+            }, 500
         except Exception as e:
             db.session.rollback()
-            return {"message": str(e)}, 500
+            print(str(e))
+            return {
+                "message": f"{str(e)}.",
+                "status": 500,
+            }, 500
         finally:
             db.session.remove()
 
@@ -61,19 +81,43 @@ BLOCKLIST = set()
 @api_handle_exception
 @jwt.expired_token_loader
 def expired_token_response(jwt_header, jwt_payload):
-    return jsonify({"message": "Token has expired"}), 401
+    return (
+        jsonify(
+            {
+                "message": "Token has expired.",
+                "status": 401,
+            }
+        ),
+        401,
+    )
 
 
 @api_handle_exception
 @jwt.invalid_token_loader
 def invalid_token_response(callback):
-    return jsonify({"message": "Invalid token"}), 401
+    return (
+        jsonify(
+            {
+                "message": "Invalid token.",
+                "status": 401,
+            }
+        ),
+        401,
+    )
 
 
 @api_handle_exception
 @jwt.unauthorized_loader
 def unauthorized_response(callback):
-    return jsonify({"message": "Missing Authorization Header"}), 401
+    return (
+        jsonify(
+            {
+                "message": "Missing Authorization Header.",
+                "status": 401,
+            }
+        ),
+        401,
+    )
 
 
 @api_handle_exception
@@ -86,6 +130,11 @@ def check_if_token_in_blocklist(jwt_header, jwt_payload):
 @jwt.revoked_token_loader
 def revoked_token_callback(jwt_header, jwt_payload):
     return (
-        jsonify({"message": "Token has been revoked"}),
+        jsonify(
+            {
+                "message": "Token has been revoked.",
+                "status": 401,
+            }
+        ),
         401,
     )
