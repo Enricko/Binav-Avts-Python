@@ -9,3 +9,4 @@ schedule
 apscheduler
 Flask-Mail
 pyotp
+flask-cors

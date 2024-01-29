@@ -5,6 +5,7 @@ from app.model.coordinate_gga import CoordinateGGA
 from app.model.coordinate_hdt import CoordinateHDT
 from app.model.coordinate_vtg import CoordinateVTG
 from app.model.coordinate import Coordinate
+import datetime
 
 from app.model.kapal import Kapal
 
@@ -20,26 +21,27 @@ def socketrun1second():
 @socketio.on("connect")
 def handle_connect():
     with app.app_context():
+        print("asdsada")
         user_id = request.sid  # Using the unique session ID as the user ID
         user_sessions[user_id] = {"data": None}  # Initialize user data
-        user_sessions[user_id]["payload"] = None
+        user_sessions[user_id]["payload"] = {}
         join_room(user_id)
         print(f"User {user_id} connected")
         socketio.emit("kapal_coor", kapal_coor_data(), room=user_id)
-        scheduler.add_job(
+        user_sessions[user_id]["job"] = scheduler.add_job(
             handle_kapal_coordinate,
             "interval",
-            seconds=5,
+            seconds=.1,
             args=[user_sessions[user_id]["payload"], user_id],
-        )
+        ).id
 
-    # emit("kapal_coor", kapal_coor_data(), broadcast=False)
 
 
 @socketio.on("disconnect")
 def handle_disconnect():
     user_id = request.sid
     leave_room(user_id)
+    scheduler.remove_job(user_sessions[user_id]["job"])
     del user_sessions[user_id]
     print(f"User {user_id} disconnected")
 
@@ -77,6 +79,9 @@ def handle_kapal_coordinate(payload=None, user_id=None):
 
 # @api_handle_exception
 def kapal_coor_data(payload={}):
+    if payload is None:
+        payload = {}
+        
     call_sign = payload.get("call_sign", None)
     page = payload.get("page", 1)
     perpage = payload.get("perpage", 100)
@@ -114,7 +119,7 @@ def kapal_coor_data(payload={}):
     kapal_coor_page = kapal_coor.offset(offset).limit(perpage)
 
     data_json = {
-        "message": "Data di temukan",
+        "message": f"{datetime.datetime.now()}",
         "status": 200,
         "perpage": perpage,
         "page": page,

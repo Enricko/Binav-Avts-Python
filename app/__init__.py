@@ -1,6 +1,8 @@
 # Import necessary modules
 from importlib import import_module
 
+from flask_cors import CORS
+
 # Import specific functions from custom modules
 from app.controller.socket import socketrun1second
 
@@ -72,7 +74,8 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
-    socketio.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
+    CORS(app, resources={r"/*": {"origins": "http://localhost:53656"}})
     scheduler.start()
 
     # Add Flask-RESTful namespace
