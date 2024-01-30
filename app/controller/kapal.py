@@ -12,7 +12,7 @@ from app.resources import ns
 import datetime
 
 # Uploaded file path
-file_path = "assets/kapal/"
+file_path = "app/assets/kapal/"
 
 
 # Pagination parameters

@@ -8,7 +8,7 @@ from app.resources import ns
 
 
 # Uploaded file path
-file_path = "assets/mapping/"
+file_path = "app/assets/mapping/"
 
 # Pagination parameters
 pagination_parser = reqparse.RequestParser()
@@ -45,7 +45,7 @@ class MappingList(Resource):
         args = insert_mapping_parser.parse_args()
         id_client = args["id_client"]
         name = args["name"]
-        switch = args["switch"]
+        status = args["status"]
         uploaded_file = args["file"]
 
         # Do something with the uploaded file, for example, save it
@@ -68,7 +68,7 @@ class MappingList(Resource):
                 kapal = Mapping(
                     id_client=id_client,
                     name=name,
-                    switch=switch,
+                    status=status,
                     file=file_name,
                 )
 
@@ -110,7 +110,7 @@ class MappingData(Resource):
     def put(self,id_mapping):
         args = insert_mapping_parser.parse_args()
         name = args["name"]
-        switch = args["switch"]
+        status = args["status"]
         uploaded_file = args["file"]
         
         mapping = Mapping.query.get(id_mapping)
@@ -119,7 +119,7 @@ class MappingData(Resource):
             raise TypeError("Mapping not found")
         
         mapping.name = name
-        mapping.switch = switch
+        mapping.status = status
 
         # Do something with the uploaded file, for example, save it
         allowed_extensions = {"kml","kmz"}

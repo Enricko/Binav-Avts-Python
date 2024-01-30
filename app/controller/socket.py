@@ -242,7 +242,7 @@ class MappingSocket:
                     "id_mapping": getattr(map, "id_mapping", None),
                     "name": getattr(map, "name", None),
                     "file": getattr(map, "file", None),
-                    "switch": getattr(map, "switch", None),
+                    "status": getattr(map, "status", None),
                 }
                 for map in (
                     mapping_page.all()

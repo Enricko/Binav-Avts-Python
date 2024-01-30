@@ -9,7 +9,7 @@ mapping_model = api.model(
         "id_mapping": fields.Integer,
         "name": fields.String,
         "file": fields.String,
-        "switch": fields.Boolean,
+        "status": fields.Boolean,
         "created_at": fields.DateTime,
         "updated_at": fields.DateTime,
     }
@@ -31,9 +31,9 @@ insert_mapping_parser = reqparse.RequestParser()
 insert_mapping_parser.add_argument("id_client", type=str)
 insert_mapping_parser.add_argument("name", type=str)
 insert_mapping_parser.add_argument("file", type=werkzeug.datastructures.FileStorage, location='files')
-insert_mapping_parser.add_argument("switch", type=bool)
+insert_mapping_parser.add_argument("status", type=bool)
 
 update_mapping_parser = reqparse.RequestParser()
 update_mapping_parser.add_argument("name", type=str)
 update_mapping_parser.add_argument("file", type=werkzeug.datastructures.FileStorage, location='files')
-update_mapping_parser.add_argument("switch", type=bool)
+update_mapping_parser.add_argument("status", type=bool)

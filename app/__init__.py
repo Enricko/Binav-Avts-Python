@@ -1,10 +1,8 @@
 # Import necessary modules
 from importlib import import_module
+from flask import send_from_directory
 
 from flask_cors import CORS
-
-# Import specific functions from custom modules
-from app.controller.socket import socketrun1second
 
 # Import extensions and resources from the current package
 from .extensions import api, db, jwt, mail, socketio, app, scheduler
@@ -14,22 +12,6 @@ from .resources import ns
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
-import time
-
-# Import scheduling-related modules
-import schedule
-
-
-# Define a scheduled job that runs socketrun1second every 5 seconds
-def scheduled_job():
-    schedule.every(5).seconds.do(socketrun1second)
-    while True:
-        try:
-            schedule.run_pending()
-            time.sleep(1)
-        except KeyboardInterrupt:
-            print("\nCtrl+C detected. Exiting the loop.")
-            break
 
 
 # Dynamically import all modules in the "model" folder
@@ -83,12 +65,18 @@ def create_app():
 
     # Dynamically import all modules in the "model" folder
     import_all_modules()
+    
+    # Accessing File
+    @app.route('/assets/<path:folder>/<path:filename>')
+    def serve_assets(folder, filename):
+        # Construct the path to the asset directory
+        asset_dir = os.path.join(app.root_path, 'assets', folder)
+
+        # Return the requested file from the asset directory
+        return send_from_directory(asset_dir, filename)
 
     # Create database tables within the app context
     with app.app_context():
         db.create_all()
-
-    # Start a thread for the scheduled job
-    # Thread(target=scheduled_job).start()
 
     return app  # Return the configured Flask app

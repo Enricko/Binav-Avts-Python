@@ -9,6 +9,7 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from apscheduler.schedulers.background import BackgroundScheduler
 
+# app = Flask(__name__, static_url_path='/assets')
 app = Flask(__name__)
 api = Api()
 db = SQLAlchemy()
