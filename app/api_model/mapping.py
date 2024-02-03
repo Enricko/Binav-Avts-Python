@@ -1,6 +1,7 @@
 from flask_restx import fields, reqparse
 import werkzeug
 from app.extensions import api
+from app.api_model.client import client_model
 
 mapping_model = api.model(
     "Mapping",
@@ -12,6 +13,7 @@ mapping_model = api.model(
         "status": fields.Boolean,
         "created_at": fields.DateTime,
         "updated_at": fields.DateTime,
+        "client":fields.Nested(client_model),
     }
 )
 

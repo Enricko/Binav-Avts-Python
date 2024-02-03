@@ -79,14 +79,14 @@ class MappingList(Resource):
                 # File Uploaded
                 uploaded_file.save(file_path + file_name)
                 
-                return {"message": "Mapping uploaded successfully."},201
+                return {"message": "Mapping uploaded successfully.","status": 201,},201
             else:
                 return {
-                    "message": "Invalid file extension. Allowed extensions: .kml , .kmz"
+                    "message": "Invalid file extension. Allowed extensions: .kml , .kmz","status": 201,
                 }, 400
         else:
             return {
-                "message": "file field is required."
+                "message": "file field is required.","status": 400,
             }, 400
         
 @ns.route("/mapping/<string:id_mapping>")
@@ -146,14 +146,14 @@ class MappingData(Resource):
                 # File Uploaded
                 uploaded_file.save(file_path + file_name)
                 
-                return {"message": "Mapping uploaded successfully."},201
+                return {"message": "Mapping uploaded successfully.","status": 201,},201
             else:
                 return {
-                    "message": "Invalid file extension. Allowed extensions: .kml , .kmz"
+                    "message": "Invalid file extension. Allowed extensions: .kml , .kmz","status": 400,
                 }, 400
         else:
             db.session.commit()
-            return {"message": "Mapping updated successfully."},201
+            return {"message": "Mapping updated successfully.","status": 201,},201
         
     @api_handle_exception
     def delete(self,id_mapping):
@@ -163,6 +163,6 @@ class MappingData(Resource):
             db.session.commit()
             if os.path.exists(f"{file_path}{mapping.file}"):
                 os.remove(f"{file_path}{mapping.file}")
-            return {"message": "Mapping successfully deleted."}, 201
-        return {"message": "Mapping not found."}, 404
+            return {"message": "Mapping successfully deleted.","status": 201,}, 201
+        return {"message": "Mapping not found.","status": 404,}, 404
     

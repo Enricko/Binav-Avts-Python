@@ -26,7 +26,7 @@ class Kapal(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
-    client = db.relationship("Client", backref="kapals", lazy=True)
+    client = db.relationship("Client", backref="kapals", lazy=False)
     
     @validates("call_sign")
     def validate_call_sign(self, key, call_sign):

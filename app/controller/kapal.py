@@ -95,14 +95,18 @@ class KapalList(Resource):
                 # File Uploaded
                 uploaded_file.save(file_path + file_name)
                 
-                return {"message": "Kapal uploaded successfully."},201
+                return {"message": "Kapal uploaded successfully.",
+            "status": 201,},201
             else:
                 return {
-                    "message": "Invalid file extension. Allowed extensions: .xml"
+                    "message": "Invalid file extension. Allowed extensions: .xml",
+                    
+            "status": 400,
                 }, 400
         else:
             return {
-                "message": "xml_file field is required."
+                "message": "xml_file field is required.",
+            "status": 400,
             }, 400
             
 @ns.route("/kapal/<string:call_sign>")
@@ -171,14 +175,17 @@ class KapalData(Resource):
                 # File Uploaded
                 uploaded_file.save(file_path + file_name)
                 
-                return {"message": "Kapal updated successfully."},201
+                return {"message": "Kapal updated successfully.",
+            "status": 201,},201
             else:
                 return {
-                    "message": "Invalid file extension. Allowed extensions: .xml"
+                    "message": "Invalid file extension. Allowed extensions: .xml",
+            "status": 400,
                 }, 400
         else:
             db.session.commit()
-            return {"message": "Kapal updated successfully."},201
+            return {"message": "Kapal updated successfully.",
+            "status": 201,},201
 
     @api_handle_exception
     def delete(self,call_sign):
@@ -188,8 +195,10 @@ class KapalData(Resource):
             db.session.commit()
             if os.path.exists(f"{file_path}{kapal.xml_file}"):
                 os.remove(f"{file_path}{kapal.xml_file}")
-            return {"message": "Kapal successfully deleted."}, 201
-        return {"message": "Kapal not found."}, 404
+            return {"message": "Kapal successfully deleted.",
+            "status": 201,}, 201
+        return {"message": "Kapal not found.",
+            "status": 404,}, 404
 
     
         

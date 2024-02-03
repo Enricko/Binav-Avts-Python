@@ -1,12 +1,12 @@
 from flask_restx import fields, reqparse
 import werkzeug
 from app.extensions import api
+from app.api_model.client import client_model
 
 
 kapal_model = api.model(
     "Kapal",
     {
-        "id_client": fields.String,
         "call_sign": fields.String,
         "flag": fields.String,
         "kelas": fields.String,
@@ -17,6 +17,7 @@ kapal_model = api.model(
         "year_built": fields.String,
         "created_at": fields.DateTime,
         "updated_at": fields.DateTime,
+        "client":fields.Nested(client_model),
     }
 )
 

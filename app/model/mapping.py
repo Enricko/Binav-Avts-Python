@@ -18,7 +18,7 @@ class Mapping(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
-    client = db.relationship("Client", backref="mappings", lazy=True)
+    client = db.relationship("Client", backref="mappings", lazy=False)
     
     @validates("id_client")
     def validate_id_client(self,key,id_client):
