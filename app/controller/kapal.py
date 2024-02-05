@@ -56,7 +56,7 @@ class KapalList(Resource):
         builder = args["builder"]
         year_built = args["year_built"]
         size = args["size"]
-        status = args["status"]
+        status = str(args["status"]).lower() == "true"
         uploaded_file = args["xml_file"]
 
         # Do something with the uploaded file, for example, save it
@@ -135,7 +135,7 @@ class KapalData(Resource):
         builder = args["builder"]
         year_built = args["year_built"]
         size = args["size"]
-        status = args["status"]
+        status = str(args["status"]).lower() == "true"
         uploaded_file = args["xml_file"]
         
         kapal = Kapal.query.get(call_sign)

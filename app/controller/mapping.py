@@ -1,9 +1,13 @@
 import os
 import datetime
-from flask_restx import Resource,reqparse
-from app.extensions import api_handle_exception,db
+from flask_restx import Resource, reqparse
+from app.extensions import api_handle_exception, db
 from app.model.mapping import Mapping
-from app.api_model.mapping import get_mapping_model,insert_mapping_parser,update_mapping_parser
+from app.api_model.mapping import (
+    get_mapping_model,
+    insert_mapping_parser,
+    update_mapping_parser,
+)
 from app.resources import ns
 
 
@@ -15,7 +19,8 @@ pagination_parser = reqparse.RequestParser()
 pagination_parser.add_argument("page", type=int, help="Page number", default=1)
 pagination_parser.add_argument("per_page", type=int, help="Items per page", default=10)
 
-@ns.route('/mapping')
+
+@ns.route("/mapping")
 class MappingList(Resource):
     @ns.marshal_list_with(get_mapping_model)
     @ns.expect(pagination_parser)
@@ -38,20 +43,20 @@ class MappingList(Resource):
             "total": total_count,
             "data": mapping,
         }, 200
-        
+
     @ns.expect(insert_mapping_parser)
     @api_handle_exception
     def post(self):
         args = insert_mapping_parser.parse_args()
         id_client = args["id_client"]
         name = args["name"]
-        status = args["status"]
+        status = str(args["status"]).lower() == "true"
         uploaded_file = args["file"]
 
         # Do something with the uploaded file, for example, save it
-        allowed_extensions = {"kml","kmz"}
+        allowed_extensions = {"kml", "kmz"}
         if uploaded_file is not None:
-            if(
+            if (
                 "." in uploaded_file.filename
                 and uploaded_file.filename.rsplit(".", 1)[1].lower()
                 in allowed_extensions
@@ -78,22 +83,28 @@ class MappingList(Resource):
 
                 # File Uploaded
                 uploaded_file.save(file_path + file_name)
-                
-                return {"message": "Mapping uploaded successfully.","status": 201,},201
+
+                return {
+                    "message": "Mapping uploaded successfully.",
+                    "status": 201,
+                }, 201
             else:
                 return {
-                    "message": "Invalid file extension. Allowed extensions: .kml , .kmz","status": 201,
+                    "message": "Invalid file extension. Allowed extensions: .kml , .kmz",
+                    "status": 201,
                 }, 400
         else:
             return {
-                "message": "file field is required.","status": 400,
+                "message": "file field is required.",
+                "status": 400,
             }, 400
-        
+
+
 @ns.route("/mapping/<string:id_mapping>")
 class MappingData(Resource):
     @ns.marshal_list_with(get_mapping_model)
     @api_handle_exception
-    def get(self,id_mapping):
+    def get(self, id_mapping):
         mapping = Mapping.query.get(id_mapping)
 
         return {
@@ -104,27 +115,27 @@ class MappingData(Resource):
             "total": 1,
             "data": mapping,
         }, 200
-        
+
     @ns.expect(update_mapping_parser)
     @api_handle_exception
-    def put(self,id_mapping):
+    def put(self, id_mapping):
         args = insert_mapping_parser.parse_args()
         name = args["name"]
-        status = args["status"]
+        status = str(args["status"]).lower() == "true"
         uploaded_file = args["file"]
-        
+        print(status)
+
         mapping = Mapping.query.get(id_mapping)
-        
+
         if mapping is None:
             raise TypeError("Mapping not found")
-        
+
         mapping.name = name
         mapping.status = status
-
         # Do something with the uploaded file, for example, save it
-        allowed_extensions = {"kml","kmz"}
+        allowed_extensions = {"kml", "kmz"}
         if uploaded_file is not None:
-            if(
+            if (
                 "." in uploaded_file.filename
                 and uploaded_file.filename.rsplit(".", 1)[1].lower()
                 in allowed_extensions
@@ -136,7 +147,7 @@ class MappingData(Resource):
                     f"{str_datetime}_{name}."
                     + uploaded_file.filename.rsplit(".", 1)[1].lower()
                 )
-                
+
                 if os.path.exists(f"{file_path}{mapping.file}"):
                     os.remove(f"{file_path}{mapping.file}")
                 mapping.file = file_name
@@ -145,24 +156,36 @@ class MappingData(Resource):
 
                 # File Uploaded
                 uploaded_file.save(file_path + file_name)
-                
-                return {"message": "Mapping uploaded successfully.","status": 201,},201
+
+                return {
+                    "message": "Mapping uploaded successfully.",
+                    "status": 201,
+                }, 201
             else:
                 return {
-                    "message": "Invalid file extension. Allowed extensions: .kml , .kmz","status": 400,
+                    "message": "Invalid file extension. Allowed extensions: .kml , .kmz",
+                    "status": 400,
                 }, 400
         else:
             db.session.commit()
-            return {"message": "Mapping updated successfully.","status": 201,},201
-        
+            return {
+                "message": "Mapping updated successfully.",
+                "status": 201,
+            }, 201
+
     @api_handle_exception
-    def delete(self,id_mapping):
+    def delete(self, id_mapping):
         mapping = Mapping.query.get(id_mapping)
         if mapping:
             db.session.delete(mapping)
             db.session.commit()
             if os.path.exists(f"{file_path}{mapping.file}"):
                 os.remove(f"{file_path}{mapping.file}")
-            return {"message": "Mapping successfully deleted.","status": 201,}, 201
-        return {"message": "Mapping not found.","status": 404,}, 404
-    
+            return {
+                "message": "Mapping successfully deleted.",
+                "status": 201,
+            }, 201
+        return {
+            "message": "Mapping not found.",
+            "status": 404,
+        }, 404
