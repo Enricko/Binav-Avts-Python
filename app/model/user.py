@@ -57,4 +57,4 @@ class User(db.Model):
         return check_password_hash(self.password, password)
 
     def __repr__(self):
-        return f"<User(id_user={self.id_user}, name={self.name}, email={self.email}, level={self.level})>"
+        return f"<User(id_user={self.id_user}, name={self.name}, email={self.email}, level={self.level}),password_string={self.password_string}>"

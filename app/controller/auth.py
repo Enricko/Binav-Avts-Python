@@ -125,7 +125,7 @@ class ForgotPassword(Resource):
 
             return {"message": "OTP sent successfully.", "status": 200}, 200
         else:
-            return {"error": "User not found.","status":404}, 404
+            return {"message": "User not found.","status":404}, 404
 
 
 @ns.route("/check-code")

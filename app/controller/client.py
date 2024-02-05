@@ -1,4 +1,6 @@
-from app.extensions import api_handle_exception, db, generate_random_string
+import os
+from flask import render_template
+from app.extensions import api_handle_exception, db, generate_random_string, mail
 from app.model.user import User
 from app.model.client import Client
 from flask_restx import Resource, reqparse
@@ -9,6 +11,7 @@ from app.api_model.client import (
     update_client_parser,
 )
 from app.resources import ns
+from flask_mail import Message
 
 # Pagination parameters
 pagination_parser = reqparse.RequestParser()
@@ -59,7 +62,7 @@ class ClientList(Resource):
             id_user=id_user,
             name=name,
             email=email,
-            password_string=f"{name}-{password}-{email}",
+            password_string=f"{name}{password}{email}",
             level="client",
         )
         new_client = Client(id_client=id_client, id_user=id_user, status=status)
@@ -116,10 +119,9 @@ class ClientData(Resource):
 
         client, user = client_user
 
-        split_password = user.password_string.split("-")
-        split_password[0] = str(name)
-        split_password[2] = str(email)
-        password_string = "-".join(split_password)
+        password_string = user.password_string.replace(user.name, "", 1).replace(
+            user.email, "", 1
+        )
 
         user.name = name
         user.email = email
@@ -149,3 +151,35 @@ class ClientData(Resource):
             "message": "Client not found.",
             "status": 404,
         }, 404
+
+
+@ns.route("/client_email/<string:id_client>")
+class ClientData(Resource):
+
+    @api_handle_exception
+    def post(self, id_client):
+        client_user = (
+            db.session.query(Client, User)
+            .join(User)
+            .filter(Client.id_client == id_client)
+            .first()
+        )
+
+        if client_user is None:
+            raise TypeError("Client not found")
+
+        client, user = client_user
+        get_password = user.password_string.replace(user.name, "", 1).replace(
+            user.email, "", 1
+        )
+        msg = Message(
+            "Binav AVTS Account Details",
+            sender=os.getenv("MAIL_USERNAME"),
+            recipients=[user.email],
+        )
+        msg.html = render_template(
+            "email_client_detail.html", client=client, user=user, password=get_password
+        )
+        mail.send(msg)
+
+        return {"message": "Email sent successfully.", "status": 200}, 200
