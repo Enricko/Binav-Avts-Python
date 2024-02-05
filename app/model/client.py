@@ -1,6 +1,7 @@
 from app.extensions import db
 from sqlalchemy.orm import validates
 
+
 class Client(db.Model):
     __tablename__ = "clients"
 
@@ -12,19 +13,21 @@ class Client(db.Model):
     )
     status = db.Column(db.Boolean, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
-
+    updated_at = db.Column(
+        db.DateTime,
+        default=db.func.current_timestamp(),
+        onupdate=db.func.current_timestamp(),
+    )
 
     user = db.relationship("User", backref="client", lazy=False)
-    
+
     @validates("status")
     def validate_status(self, key, status):
-        if not status:
+        if status is None:
             raise AssertionError("Status field is required")
-        if status not in [0,1]:
+        if str(status).lower() not in ["true", "false"]:
             raise AssertionError("Status only contain [true/false]")
         return status
-    
+
     def __repr__(self):
         return f"<Client(id_client={self.id_client}, id_user={self.id_user}, status={self.status}, timestamps={self.timestamps})>"
-

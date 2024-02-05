@@ -49,7 +49,7 @@ class ClientList(Resource):
         id_user = generate_random_string(35)
         name = args["name"]
         email = args["email"]
-        status = args["status"]
+        status = str(args["status"]).lower() == "true"
         password = args["password"]
         password_confirmation = args["password_confirmation"]
         # Create a new client
@@ -76,10 +76,10 @@ class ClientList(Resource):
 
 @ns.route("/client/<string:id_client>")
 class ClientData(Resource):
-    
+
     @ns.marshal_list_with(get_client_model)
     @api_handle_exception
-    def get(self,id_client):
+    def get(self, id_client):
 
         total_count = Client.query.count()
 
@@ -91,7 +91,7 @@ class ClientData(Resource):
             "total": total_count,
             "data": client,
         }, 200
-        
+
     @ns.expect(update_client_parser)
     @api_handle_exception
     def put(self, id_client):
@@ -99,7 +99,7 @@ class ClientData(Resource):
 
         name = args["name"]
         email = args["email"]
-        status = args["status"]
+        status = str(args["status"]).lower() == "true"
 
         client_user = (
             db.session.query(Client, User)
@@ -137,4 +137,3 @@ class ClientData(Resource):
 
             return {"message": "Client successfully deleted."}, 201
         return {"message": "Client not found."}, 404
-    

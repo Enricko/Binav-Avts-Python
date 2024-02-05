@@ -35,6 +35,14 @@ class Mapping(db.Model):
             raise AssertionError("Name field is required")
         return name
     
+    @validates("status")
+    def validate_status(self, key, status):
+        if status is None:
+            raise AssertionError("Status field is required")
+        if str(status).lower() not in ["true","false"]:
+            raise AssertionError("Status only contain [true/false]")
+        return status
+    
     @validates("file")
     def validate_file(self, key, file):
         if not file:

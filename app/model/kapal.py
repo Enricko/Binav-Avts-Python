@@ -48,9 +48,9 @@ class Kapal(db.Model):
         
     @validates("status")
     def validate_status(self, key, status):
-        if not status:
+        if status is None:
             raise AssertionError("Status field is required")
-        if status not in [0,1]:
+        if str(status).lower() not in ["true","false"]:
             raise AssertionError("Status only contain [true/false]")
         return status
     

@@ -120,6 +120,7 @@ class MappingData(Resource):
     @api_handle_exception
     def put(self, id_mapping):
         args = insert_mapping_parser.parse_args()
+        print(args["status"])
         name = args["name"]
         status = str(args["status"]).lower() == "true"
         uploaded_file = args["file"]
