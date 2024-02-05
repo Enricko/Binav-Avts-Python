@@ -69,8 +69,10 @@ class ClientList(Resource):
         db.session.add(new_user)
         db.session.commit()
         return (
-            {"message": "Client successfully created.",
-            "status": 201,},
+            {
+                "message": "Client successfully created.",
+                "status": 201,
+            },
             201,
         )
 
@@ -125,8 +127,10 @@ class ClientData(Resource):
         user.password_string = password_string
         db.session.commit()
 
-        return {"message": "Client successfully updated.",
-            "status": 201,}, 201
+        return {
+            "message": "Client successfully updated.",
+            "status": 201,
+        }, 201
 
     @api_handle_exception
     def delete(self, id_client):
@@ -137,7 +141,11 @@ class ClientData(Resource):
             db.session.delete(user)
             db.session.commit()
 
-            return {"message": "Client successfully deleted.",
-            "status": 201,}, 201
-        return {"message": "Client not found.",
-            "status": 404,}, 404
+            return {
+                "message": "Client successfully deleted.",
+                "status": 201,
+            }, 201
+        return {
+            "message": "Client not found.",
+            "status": 404,
+        }, 404
