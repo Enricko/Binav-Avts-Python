@@ -1,5 +1,6 @@
 import os
 from flask import render_template
+from flask_jwt_extended import jwt_required
 from app.extensions import api_handle_exception, db, generate_random_string, mail
 from app.model.user import User
 from app.model.client import Client
@@ -157,7 +158,7 @@ class ClientData(Resource):
 class ClientData(Resource):
 
     @api_handle_exception
-    def post(self, id_client):
+    def get(self, id_client):
         client_user = (
             db.session.query(Client, User)
             .join(User)
