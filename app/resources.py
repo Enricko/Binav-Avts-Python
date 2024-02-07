@@ -17,8 +17,3 @@ import app.controller.mapping # noqa: E402
 
 # Route to Socket
 import app.controller.socket # noqa: E402
-
-
-
-
-
