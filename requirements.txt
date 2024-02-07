@@ -1,4 +1,4 @@
-dotenv
+python-dotenv
 flask
 flask-restx
 flask_socketio
@@ -10,5 +10,3 @@ apscheduler
 Flask-Mail
 pyotp
 flask-cors
-
-                    {{ str_replace(user.name, '', str_replace($client->email, '', $client->password_string)) }}<br>
