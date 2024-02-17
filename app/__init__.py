@@ -1,18 +1,22 @@
 # Import necessary modules
 from importlib import import_module
+import threading
+import time
+from app.model.ip_kapal import IpKapal
 from flask import send_from_directory
 
 from flask_cors import CORS
 
 # Import extensions and resources from the current package
 from .extensions import api, db, jwt, mail, socketio, app, scheduler
-from .resources import ns
+from .resources import ns, telnet_worker
 
 # Import standard libraries and third-party packages
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
+checked_configs = {}
 
 # Dynamically import all modules in the "model" folder
 def import_all_modules():
@@ -57,7 +61,7 @@ def create_app():
     jwt.init_app(app)
     mail.init_app(app)
     socketio.init_app(app, cors_allowed_origins="*")
-    CORS(app, resources={r"/*": {"origins": "http://localhost:53656"}})
+    CORS(app, origins="*")
     scheduler.start()
 
     # Add Flask-RESTful namespace
@@ -80,3 +84,34 @@ def create_app():
         db.create_all()
 
     return app  # Return the configured Flask app
+
+
+# Variable to store checked status
+def check_for_new_configurations():
+    with app.app_context():
+        while True:
+            print(len(checked_configs))
+            # Fetch IP and port from the database
+            new_configs = db.session.query(IpKapal).all()
+
+            # Check for new configurations
+            for config in new_configs:
+                if (config.ip, config.port) not in checked_configs:
+                    # Start telnet connection for new configuration in a separate thread
+                    telnet_thread = threading.Thread(
+                        target=telnet_worker, args=(config.ip, config.port,config.call_sign,str(config.type_ip))
+                    )
+                    telnet_thread.start()
+                    # Mark the configuration as checked
+                    checked_configs[(config.ip, config.port)] = True
+
+                    # Stop telnet readers for configurations that are no longer in the database
+            for ip, port in list(checked_configs.keys()):
+                if (ip, port) not in [
+                    (config.ip, config.port) for config in new_configs
+                ]:
+                    telnet_thread = checked_configs.pop((ip, port))
+                    telnet_thread.join()
+
+            # Sleep for some time before checking again
+            time.sleep(60)  # Adjust as needed

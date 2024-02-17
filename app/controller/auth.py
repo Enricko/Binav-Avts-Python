@@ -37,6 +37,7 @@ class AuthLogin(Resource):
         args = login_parser.parse_args()
         email = args["email"]
         password = args["password"]
+
         user = User.query.filter_by(email=email).first()
         if user is not None:
             if user.check_password(password):
@@ -53,7 +54,6 @@ class AuthLogin(Resource):
                     "status": 401,
                 }, 401
         else:
-            print("Email123")
             return {
                 "message": "Email not found.",
                 "status": 404,
@@ -173,7 +173,7 @@ class ResetPassword(Resource):
             ):
                 user = User.query.filter_by(email=email).first()
 
-                user.password_string = f"{user.name}-{password}-{email}"
+                user.password_string = f"{user.name}{password}{email}"
                 user.set_password(password, password_confirmation)
                 db.session.delete(resetCodePassword)
 
