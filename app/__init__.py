@@ -40,7 +40,7 @@ def create_app():
     # Configure the Flask app with database and JWT settings
     app.config[
         "SQLALCHEMY_DATABASE_URI"
-    ] = f"{os.getenv('DB_CONNECTION')}+mysqlconnector://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@localhost/{os.getenv('DB_DATABASE')}"
+    ] = f"{os.getenv('DB_CONNECTION')}+mysqlconnector://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_DATABASE')}"
     app.config["DEBUG"] = os.getenv("DEBUG")
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_KEY")
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
