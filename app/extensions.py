@@ -17,6 +17,7 @@ jwt = JWTManager()
 mail = Mail()
 socketio = SocketIO()
 scheduler = BackgroundScheduler()
+checked_configs = {}
 
 
 def generate_random_string(length):

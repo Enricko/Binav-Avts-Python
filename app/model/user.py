@@ -1,7 +1,7 @@
 import re
 from app.extensions import db
 from sqlalchemy.orm import validates
-from werkzeug.security import generate_password_hash, check_password_hash
+from passlib.hash import scrypt
 
 class User(db.Model):
     __tablename__ = "users"
@@ -51,10 +51,10 @@ class User(db.Model):
             raise AssertionError("Password must contain at least 8")
         if password != password_confirmation:
             raise AssertionError("Password confirmation doesnt match")
-        self.password = generate_password_hash(password)
+        self.password = scrypt.encrypt(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password, password)
+        return scrypt.verify(password, self.password)
 
     def __repr__(self):
         return f"<User(id_user={self.id_user}, name={self.name}, email={self.email}, level={self.level}),password_string={self.password_string}>"

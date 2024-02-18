@@ -8,15 +8,15 @@ from flask import send_from_directory
 from flask_cors import CORS
 
 # Import extensions and resources from the current package
-from .extensions import api, db, jwt, mail, socketio, app, scheduler
-from .resources import ns, telnet_worker
+from .extensions import api, db, jwt, mail, socketio, app, scheduler, checked_configs
+from .resources import ns
+from app.telnet import telnet_worker
 
 # Import standard libraries and third-party packages
 import os
 from datetime import timedelta
 from dotenv import load_dotenv
 
-checked_configs = {}
 
 # Dynamically import all modules in the "model" folder
 def import_all_modules():
@@ -38,9 +38,9 @@ def create_app():
     load_dotenv()
 
     # Configure the Flask app with database and JWT settings
-    app.config[
-        "SQLALCHEMY_DATABASE_URI"
-    ] = f"{os.getenv('DB_CONNECTION')}+mysqlconnector://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_DATABASE')}"
+    app.config["SQLALCHEMY_DATABASE_URI"] = (
+        f"{os.getenv('DB_CONNECTION')}+mysqlconnector://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_HOST')}/{os.getenv('DB_DATABASE')}"
+    )
     app.config["DEBUG"] = os.getenv("DEBUG")
     app.config["JWT_SECRET_KEY"] = os.getenv("JWT_KEY")
     app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
@@ -69,12 +69,12 @@ def create_app():
 
     # Dynamically import all modules in the "model" folder
     import_all_modules()
-    
+
     # Accessing File
-    @app.route('/assets/<path:folder>/<path:filename>')
+    @app.route("/assets/<path:folder>/<path:filename>")
     def serve_assets(folder, filename):
         # Construct the path to the asset directory
-        asset_dir = os.path.join(app.root_path, 'assets', folder)
+        asset_dir = os.path.join(app.root_path, "assets", folder)
 
         # Return the requested file from the asset directory
         return send_from_directory(asset_dir, filename)
@@ -83,6 +83,9 @@ def create_app():
     with app.app_context():
         db.create_all()
 
+    # config_thread = threading.Thread(target=check_for_new_configurations)
+    # config_thread.start()
+
     return app  # Return the configured Flask app
 
 
@@ -90,28 +93,41 @@ def create_app():
 def check_for_new_configurations():
     with app.app_context():
         while True:
-            print(len(checked_configs))
-            # Fetch IP and port from the database
-            new_configs = db.session.query(IpKapal).all()
+            try:
+                # Fetch IP and port from the database
+                new_configs = db.session.query(IpKapal).all()
 
-            # Check for new configurations
-            for config in new_configs:
-                if (config.ip, config.port) not in checked_configs:
-                    # Start telnet connection for new configuration in a separate thread
-                    telnet_thread = threading.Thread(
-                        target=telnet_worker, args=(config.ip, config.port,config.call_sign,str(config.type_ip))
-                    )
-                    telnet_thread.start()
-                    # Mark the configuration as checked
-                    checked_configs[(config.ip, config.port)] = True
+                # Check for new configurations
+                for config in new_configs:
+                    # print(config.id_ip_kapal, config.call_sign)
+                    if (config.ip, config.port) not in checked_configs:
+                        # Start telnet connection for new configuration in a separate thread
+                        telnet_thread = threading.Thread(
+                            target=telnet_worker,
+                            args=(
+                                config.ip,
+                                config.port,
+                                config.call_sign,
+                                str(config.type_ip),
+                            ),
+                        )
+                        telnet_thread.start()
+                        # Mark the configuration as checked
+                        checked_configs[(config.ip, config.port)] = telnet_thread
 
-                    # Stop telnet readers for configurations that are no longer in the database
-            for ip, port in list(checked_configs.keys()):
-                if (ip, port) not in [
-                    (config.ip, config.port) for config in new_configs
-                ]:
-                    telnet_thread = checked_configs.pop((ip, port))
-                    telnet_thread.join()
+                        # Stop telnet readers for configurations that are no longer in the database
+                for ip, port in list(checked_configs.keys()):
+                    if (ip, port) not in [
+                        (config.ip, config.port) for config in new_configs
+                    ]:
+                        telnet_thread = checked_configs.pop((ip, port))
+                        telnet_thread.join()
 
-            # Sleep for some time before checking again
-            time.sleep(60)  # Adjust as needed
+                # Sleep for some time before checking again
+            except Exception as e:
+                print(e)
+            finally:
+                db.session.commit()
+                time.sleep(15)  # Adjust as needed
+                db.session.close()
+

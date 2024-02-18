@@ -9,7 +9,7 @@ class IpKapal(db.Model):
         db.ForeignKey("kapals.call_sign", onupdate="CASCADE", ondelete="CASCADE"),
         nullable=False,
     )
-    type_ip = db.Column(db.Enum("All", "gga", "hdt", "vtg"), nullable=False)
+    type_ip = db.Column(db.Enum("all", "gga", "hdt", "vtg"), nullable=False)
     ip = db.Column(db.String(255), nullable=False)
     port = db.Column(db.Integer, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())

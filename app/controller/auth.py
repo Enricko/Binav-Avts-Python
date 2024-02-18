@@ -18,6 +18,7 @@ from app.api_model.user import (
     otp_parser,
     otp_code_check_parser,
     reset_password_parser,
+    change_password_parser,
 )
 from flask_restx import Resource, reqparse
 from app.resources import ns
@@ -152,7 +153,6 @@ class CheckCode(Resource):
         else:
             return {"message": "Invalid OTP.", "status": 400}, 400
 
-
 @ns.route("/reset-password")
 class ResetPassword(Resource):
     @ns.expect(reset_password_parser)
@@ -186,3 +186,43 @@ class ResetPassword(Resource):
                 return {"message": "OTP Expired.", "status": 201}, 201
         else:
             return {"message": "Invalid OTP.", "status": 400}, 400
+
+
+@ns.route("/change-password")
+class ChangePassword(Resource):
+    @ns.expect(change_password_parser)
+    @api_handle_exception
+    @jwt_required()
+    def post(self):
+        args = change_password_parser.parse_args()
+
+        old_password = args["old_password"]
+        new_password = args["new_password"]
+        new_password_confirmation = args["new_password_confirmation"]
+        
+        current_user = get_jwt_identity()
+        user = User.query.get(current_user)
+        if user is not None:
+            if user.check_password(old_password):
+                # Include additional user data in the identity
+                if(new_password == new_password_confirmation):
+                    user.set_password(new_password, new_password_confirmation)
+                    db.session.commit()
+                    return {
+                        "message" : "Successfully change password."
+                    }
+
+                return {
+                    "message": "New Password Confirmation field is required.",
+                    "status": 403,
+                }, 403
+            else:
+                return {
+                    "message": "Old Password are incorrect.",
+                    "status": 401,
+                }, 401
+        else:
+            return {
+                "message": "User not found.",
+                "status": 404,
+            }, 404

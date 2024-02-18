@@ -1,11 +1,14 @@
 import os
 from app.extensions import api_handle_exception, db, generate_random_string
+from app.model.ip_kapal import IpKapal
 from flask_restx import Resource, reqparse
 from sqlalchemy.exc import IntegrityError
 from app.api_model.kapal import (
     get_kapal_model,
     insert_kapal_parser,
     update_kapal_parser,
+    get_ip_kapal_model,
+    insert_ip_kapal_parser,
 )
 from app.model.kapal import Kapal
 from app.resources import ns
@@ -200,5 +203,44 @@ class KapalData(Resource):
         return {"message": "Kapal not found.",
             "status": 404,}, 404
 
+@ns.route("/ip_kapal/<string:call_sign>")
+class IpKapalList(Resource):
+    @ns.marshal_with(get_ip_kapal_model)
+    @api_handle_exception
+    def get(self,call_sign):
+        ip_kapal = IpKapal.query.filter_by(call_sign=call_sign).all()
+
+        return {
+            "message": "Data Ip Kapal Ditemukan.",
+            "status": 200,
+            "total": len(ip_kapal),
+            "data": ip_kapal,
+        }, 200
     
-        
+    @ns.expect(insert_ip_kapal_parser)
+    @api_handle_exception
+    def post(self,call_sign):
+        args = insert_ip_kapal_parser.parse_args()
+
+        type_ip = args['type_ip']
+        ip = args['ip']
+        port = args['port']
+
+        new_ip_kapal = IpKapal(
+            call_sign=call_sign,
+            type_ip=type_ip,
+            ip=ip,
+            port=port
+        )
+
+        db.session.add(new_ip_kapal)
+        db.session.commit()
+        return (
+            {
+                "message": "Ip Kapal successfully created.",
+                "status": 201,
+            },
+            201,
+        )
+
+

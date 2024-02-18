@@ -27,3 +27,8 @@ reset_password_parser.add_argument("email", type=str)
 reset_password_parser.add_argument("otp_code", type=str)
 reset_password_parser.add_argument("password", type=str,help='Password field is required')
 reset_password_parser.add_argument("password_confirmation", type=str)
+
+change_password_parser = reqparse.RequestParser()
+change_password_parser.add_argument("old_password", type=str)
+change_password_parser.add_argument("new_password", type=str)
+change_password_parser.add_argument("new_password_confirmation", type=str)
