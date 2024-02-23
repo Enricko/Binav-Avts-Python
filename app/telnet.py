@@ -12,42 +12,51 @@ from app.model.coordinate_vtg import CoordinateVTG
 def telnet_worker(ip, port, call_sign, type_ip):
     # Connect to telnet
     while True:
-        if checked_configs != {} and (ip, port) not in [
-            (ip, port) for config in checked_configs.keys()
-        ]:
-            break
+        tn = telnetlib.Telnet(ip, port)
         try:
-            tn = telnetlib.Telnet(ip, port)
+            if checked_configs != {} and (ip, port) not in [(ip, port) for config in checked_configs.keys()]:
+                break
+        
             gngga_received = False
             gnhdt_received = False
             gnvtg_received = False
             while True:
-                if checked_configs != {} and (ip, port) not in [
-                    (ip, port) for config in checked_configs.keys()
-                ]:
+                try:
+                    if checked_configs != {} and (ip, port) not in [
+                        (ip, port) for config in checked_configs.keys()
+                    ]:
+                        break
+                    
+                    data = tn.read_until(b"\n").decode("ascii").strip()
+                    # dt = datetime.now()
+                    # dt_string = dt.strftime("%Y-%m-%d %H:%M:%S")
+                    # Here you can process the received data, for example, print it
+                    if ("GGA" in data) and (type_ip == "gga" or type_ip == "all"):
+                        handle_gngga_message(data, call_sign)
+                        gngga_received = True
+                    elif ("HDT" in data) and (type_ip == "hdt" or type_ip == "all"):
+                        handle_gnhdt_message(data, call_sign)
+                        gnhdt_received = True
+                    elif ("VTG" in data) and (type_ip == "vtg" or type_ip == "all"):
+                        handle_gnvtg_message(data, call_sign)
+                        gnvtg_received = True
+                    # Delay for 5 seconds before reading again
+                    if gngga_received and gnhdt_received and gnvtg_received:
+                        gngga_received = False
+                        gnhdt_received = False
+                        gnvtg_received = False
+                except Exception as e:
+                    print(f"Error in telnet connection to {ip}:{port}: {e}")
+                    tn.close()
                     break
-                data = tn.read_until(b"\n").decode("ascii").strip()
-                # dt = datetime.now()
-                # dt_string = dt.strftime("%Y-%m-%d %H:%M:%S")
-                # Here you can process the received data, for example, print it
-                if ("GGA" in data) and (type_ip == "gga" or type_ip == "all"):
-                    # handle_gngga_message(data, call_sign)
-                    gngga_received = True
-                elif ("HDT" in data) and (type_ip == "hdt" or type_ip == "all"):
-                    # handle_gnhdt_message(data, call_sign)
-                    gnhdt_received = True
-                elif ("VTG" in data) and (type_ip == "vtg" or type_ip == "all"):
-                    # handle_gnvtg_message(data, call_sign)
-                    gnvtg_received = True
-                # Delay for 5 seconds before reading again
-                if gngga_received and gnhdt_received and gnvtg_received:
-                    time.sleep(15)
+                finally:
                     gngga_received = False
                     gnhdt_received = False
                     gnvtg_received = False
-
         except Exception as e:
             print(f"Error in telnet connection to {ip}:{port}: {e}")
+        finally:
+            tn.close()
             time.sleep(30)
 
 
@@ -71,9 +80,9 @@ def handle_gngga_message(data, call_sign):
             parts = data.split(",")
             message_id = parts[0]
             utc_position = parts[1]
-            latitude = degree2decimal(float(parts[2]), parts[3])
+            latitude = degree2decimal(float(parts[2]),parts[3])
             direction_latitude = parts[3]
-            longitude = degree2decimal(float(parts[4]), parts[5])
+            longitude = degree2decimal(float(parts[4]),parts[5])
             direction_longitude = parts[5]
             gps_quality_indicator = int(parts[6])
             number_sv = int(parts[7])
@@ -129,7 +138,7 @@ def handle_gngga_message(data, call_sign):
 
             db.session.commit()
         except Exception as e:
-            print(e)
+            print(f"Insert GGA error : {e}")
             db.session.rollback()
         finally:
             db.session.close()
@@ -162,7 +171,7 @@ def handle_gnhdt_message(data, call_sign):
                 coor.id_coor_hdt = coor_hdt.id_coor_hdt
                 db.session.commit()
         except Exception as e:
-            print(e)
+            print(f"Insert HDT error : {e}")
             db.session.rollback()
         finally:
             db.session.close()
@@ -217,7 +226,7 @@ def handle_gnvtg_message(data, call_sign):
                 coor.id_coor_vtg = coor_vtg.id_coor_vtg
                 db.session.commit()
         except Exception as e:
-            print(e)
+            print(f"Insert VTG error : {e}")
             db.session.rollback()
         finally:
             db.session.close()

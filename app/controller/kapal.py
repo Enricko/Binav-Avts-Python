@@ -242,5 +242,21 @@ class IpKapalList(Resource):
             },
             201,
         )
+    
+
+@ns.route("/ip_kapal/<string:id_ip_kapal>")
+class IpKapalData(Resource):
+    @api_handle_exception
+    def delete(self,id_ip_kapal):
+        ip_kapal = IpKapal.query.get(id_ip_kapal)
+        db.session.delete(ip_kapal)
+        db.session.commit()
+        return (
+            {
+                "message": "Ip Kapal successfully created.",
+                "status": 201,
+            },
+            201,
+        )
 
 

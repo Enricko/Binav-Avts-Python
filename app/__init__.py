@@ -83,8 +83,8 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    # config_thread = threading.Thread(target=check_for_new_configurations)
-    # config_thread.start()
+    config_thread = threading.Thread(target=check_for_new_configurations)
+    config_thread.start()
 
     return app  # Return the configured Flask app
 
