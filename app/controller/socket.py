@@ -138,16 +138,22 @@ class KapalSocket:
                     "size": getattr(kapal, "size", None),
                     "year_built": getattr(kapal, "year_built", None),
                     "xml_file": getattr(kapal, "xml_file", None),
+                    "image": getattr(kapal, "image", None),
                     "coor": {
                         "id_coor": getattr(coor, "id_coor", None),
                         "default_heading": getattr(coor, "default_heading", None),
                         "coor_gga": {
                             "latitude": getattr(coor_gga, "latitude", None),
                             "longitude": getattr(coor_gga, "longitude", None),
+                            "gps_quality_indicator": getattr(coor_gga, "gps_quality_indicator", None),
                         },
                         "coor_hdt": {
                             "id_coor_hdt": getattr(coor_hdt, "id_coor_hdt", None),
                             "heading_degree": getattr(coor_hdt, "heading_degree", None),
+                        },
+                        "coor_vtg": {
+                            "id_coor_vtg": getattr(coor_vtg, "id_coor_vtg", None),
+                            "speed_in_knots": getattr(coor_vtg, "speed_in_knots", None),
                         },
                     },
                 }

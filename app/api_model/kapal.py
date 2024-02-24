@@ -14,6 +14,7 @@ kapal_model = api.model(
         "size": fields.String,
         "status": fields.Boolean,
         "xml_file": fields.String,
+        "image": fields.String,
         "year_built": fields.String,
         "created_at": fields.DateTime,
         "updated_at": fields.DateTime,
@@ -71,6 +72,9 @@ insert_kapal_parser.add_argument("builder", type=str)
 insert_kapal_parser.add_argument(
     "xml_file", type=werkzeug.datastructures.FileStorage, location="files"
 )
+insert_kapal_parser.add_argument(
+    "image", type=werkzeug.datastructures.FileStorage, location="files"
+)
 insert_kapal_parser.add_argument("status", type=str)
 
 # Update Kapal
@@ -86,6 +90,9 @@ update_kapal_parser.add_argument(
 update_kapal_parser.add_argument("builder", type=str)
 update_kapal_parser.add_argument(
     "xml_file", type=werkzeug.datastructures.FileStorage, location="files"
+)
+update_kapal_parser.add_argument(
+    "image", type=werkzeug.datastructures.FileStorage, location="files"
 )
 update_kapal_parser.add_argument("status", type=str)
 

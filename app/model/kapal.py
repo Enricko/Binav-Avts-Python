@@ -23,6 +23,7 @@ class Kapal(db.Model):
     )  # Assuming the year is a 4-digit string
     size = db.Column(db.Enum("small", "medium", "large", "extra_large"), nullable=False)
     xml_file = db.Column(db.Text, nullable=False)
+    image = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(db.DateTime, default=db.func.current_timestamp(), onupdate=db.func.current_timestamp())
 
@@ -86,12 +87,12 @@ class Kapal(db.Model):
             raise AssertionError("Invalid size value")
         return size
     
-    @validates("xml_file")
-    def validate_xml_file(self, key, xml_file):
-        if not xml_file:
-            raise AssertionError("xml_file field is required")
-        return xml_file
+    @validates("image")
+    def validate_image(self, key, image):
+        if not image:
+            raise AssertionError("image field is required")
+        return image
 
     def __repr__(self):
-        return f"<Kapal(call_sign={self.call_sign}, id_client={self.id_client}, status={self.status}, flag={self.flag}, class_={self.class_}, builder={self.builder}, year_built={self.year_built}, size={self.size}, xml_file={self.xml_file}, timestamps={self.timestamps})>"
+        return f"<Kapal(call_sign={self.call_sign}, id_client={self.id_client}, status={self.status}, flag={self.flag}, class_={self.class_}, builder={self.builder}, year_built={self.year_built}, size={self.size}, xml_file={self.xml_file},image={self.image}, timestamps={self.timestamps})>"
 

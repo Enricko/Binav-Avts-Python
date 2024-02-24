@@ -11,53 +11,57 @@ from app.model.coordinate_vtg import CoordinateVTG
 
 def telnet_worker(ip, port, call_sign, type_ip):
     # Connect to telnet
-    while True:
-        tn = telnetlib.Telnet(ip, port)
-        try:
-            if checked_configs != {} and (ip, port) not in [(ip, port) for config in checked_configs.keys()]:
-                break
-        
-            gngga_received = False
-            gnhdt_received = False
-            gnvtg_received = False
-            while True:
-                try:
-                    if checked_configs != {} and (ip, port) not in [
-                        (ip, port) for config in checked_configs.keys()
-                    ]:
+    with app.app_context():
+        while True:
+            tn = telnetlib.Telnet(ip, port)
+            try:
+                if checked_configs != {} and (ip, port) not in [(ip, port) for config in checked_configs.keys()]:
+                    checked_configs.pop((ip, port))
+                    break
+            
+                gngga_received = False
+                gnhdt_received = False
+                gnvtg_received = False
+                while True:
+                    try:
+                        if checked_configs != {} and (ip, port) not in [
+                            (ip, port) for config in checked_configs.keys()
+                        ]:
+                            checked_configs.pop((ip, port))
+                            break
+                        
+                        data = tn.read_until(b"\n").decode("ascii").strip()
+                        # dt = datetime.now()
+                        # dt_string = dt.strftime("%Y-%m-%d %H:%M:%S")
+                        # Here you can process the received data, for example, print it
+                        if ("GGA" in data) and (type_ip == "gga" or type_ip == "all"):
+                            handle_gngga_message(data, call_sign)
+                            gngga_received = True
+                        elif ("HDT" in data) and (type_ip == "hdt" or type_ip == "all"):
+                            handle_gnhdt_message(data, call_sign)
+                            gnhdt_received = True
+                        elif ("VTG" in data) and (type_ip == "vtg" or type_ip == "all"):
+                            handle_gnvtg_message(data, call_sign)
+                            gnvtg_received = True
+                        # Delay for 5 seconds before reading again
+                        if gngga_received and gnhdt_received and gnvtg_received:
+                            gngga_received = False
+                            gnhdt_received = False
+                            gnvtg_received = False
+                    except Exception as e:
+                        app.logger.debug(f"Error in telnet connection to {ip}:{port}: {e}")
+                        tn.close()
                         break
-                    
-                    data = tn.read_until(b"\n").decode("ascii").strip()
-                    # dt = datetime.now()
-                    # dt_string = dt.strftime("%Y-%m-%d %H:%M:%S")
-                    # Here you can process the received data, for example, print it
-                    if ("GGA" in data) and (type_ip == "gga" or type_ip == "all"):
-                        handle_gngga_message(data, call_sign)
-                        gngga_received = True
-                    elif ("HDT" in data) and (type_ip == "hdt" or type_ip == "all"):
-                        handle_gnhdt_message(data, call_sign)
-                        gnhdt_received = True
-                    elif ("VTG" in data) and (type_ip == "vtg" or type_ip == "all"):
-                        handle_gnvtg_message(data, call_sign)
-                        gnvtg_received = True
-                    # Delay for 5 seconds before reading again
-                    if gngga_received and gnhdt_received and gnvtg_received:
+                    finally:
                         gngga_received = False
                         gnhdt_received = False
                         gnvtg_received = False
-                except Exception as e:
-                    print(f"Error in telnet connection to {ip}:{port}: {e}")
-                    tn.close()
-                    break
-                finally:
-                    gngga_received = False
-                    gnhdt_received = False
-                    gnvtg_received = False
-        except Exception as e:
-            print(f"Error in telnet connection to {ip}:{port}: {e}")
-        finally:
-            tn.close()
-            time.sleep(30)
+            except Exception as e:
+                app.logger.debug(f"Error in telnet connection to {ip}:{port}: {e}")
+            finally:
+                app.logger.debug(f"Error in telnet connection to {ip}:{port}")
+                tn.close()
+                time.sleep(30)
 
 
 # Function to handle $GNGGA messages
@@ -138,7 +142,7 @@ def handle_gngga_message(data, call_sign):
 
             db.session.commit()
         except Exception as e:
-            print(f"Insert GGA error : {e}")
+            app.logger.debug(f"Insert GGA error : {e}")
             db.session.rollback()
         finally:
             db.session.close()
@@ -171,7 +175,7 @@ def handle_gnhdt_message(data, call_sign):
                 coor.id_coor_hdt = coor_hdt.id_coor_hdt
                 db.session.commit()
         except Exception as e:
-            print(f"Insert HDT error : {e}")
+            app.logger.debug(f"Insert HDT error : {e}")
             db.session.rollback()
         finally:
             db.session.close()
@@ -226,7 +230,7 @@ def handle_gnvtg_message(data, call_sign):
                 coor.id_coor_vtg = coor_vtg.id_coor_vtg
                 db.session.commit()
         except Exception as e:
-            print(f"Insert VTG error : {e}")
+            app.logger.debug(f"Insert VTG error : {e}")
             db.session.rollback()
         finally:
             db.session.close()
@@ -249,7 +253,7 @@ def heading_degree(old_lat, old_lon, new_lat, new_lon):
 
         return heading
     except Exception as e:
-        print(f"An error occurred: {str(e)} in Function heading_degree()")
+        app.logger.debug(f"An error occurred: {str(e)} in Function heading_degree()")
 
 
 def degree2decimal(deg_coord, direction, precision=10) -> float:
@@ -263,4 +267,4 @@ def degree2decimal(deg_coord, direction, precision=10) -> float:
         decimal = round(decimal, precision)
         return decimal
     except Exception as e:
-        print(f"An error occurred: {str(e)} in Function degree2decimal()")
+        app.logger.debug(f"An error occurred: {str(e)} in Function degree2decimal()")
