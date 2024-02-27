@@ -127,3 +127,4 @@ def check_for_new_configurations():
                 logging.info("retry check_for_new_configurations")
                 db.session.commit()
                 db.session.close()
+            time.sleep(15)
