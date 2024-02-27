@@ -1,5 +1,6 @@
 # Import necessary modules
 from importlib import import_module
+import logging
 import threading
 import time
 from app.model.ip_kapal import IpKapal
@@ -83,23 +84,22 @@ def create_app():
     with app.app_context():
         db.create_all()
 
-    # config_thread = threading.Thread(target=check_for_new_configurations)
-    # config_thread.start()
+    config_thread = threading.Thread(target=check_for_new_configurations)
+    config_thread.start()
 
     return app  # Return the configured Flask app
 
 
 # Variable to store checked status
 def check_for_new_configurations():
-    with app.app_context():
-        while True:
+    while True:
+        with app.app_context():
             try:
                 # Fetch IP and port from the database
                 new_configs = db.session.query(IpKapal).all()
 
                 # Check for new configurations
                 for config in new_configs:
-                    # print(config.id_ip_kapal, config.call_sign)
                     if (config.ip, config.port) not in checked_configs:
                         # Start telnet connection for new configuration in a separate thread
                         telnet_thread = threading.Thread(
@@ -111,23 +111,19 @@ def check_for_new_configurations():
                                 str(config.type_ip),
                             ),
                         )
+                        checked_configs[(config.ip, config.port)] = telnet_thread
                         telnet_thread.start()
                         # Mark the configuration as checked
-                        checked_configs[(config.ip, config.port)] = telnet_thread
 
-                        # Stop telnet readers for configurations that are no longer in the database
+                # Stop telnet readers for configurations that are no longer in the database
                 for ip, port in list(checked_configs.keys()):
-                    if (ip, port) not in [
-                        (config.ip, config.port) for config in new_configs
-                    ]:
+                    if (ip, port) not in [(config.ip, config.port) for config in new_configs]:
                         telnet_thread = checked_configs.pop((ip, port))
                         telnet_thread.join()
-
-                # Sleep for some time before checking again
+                 
             except Exception as e:
-                print(e)
+                logging.info(f"check_for_new_configurations : {e}")
             finally:
+                logging.info("retry check_for_new_configurations")
                 db.session.commit()
-                time.sleep(15)  # Adjust as needed
                 db.session.close()
-

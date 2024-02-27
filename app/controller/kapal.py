@@ -74,7 +74,7 @@ class KapalList(Resource):
                 if (
                     "." in uploaded_file.filename
                     and uploaded_file.filename.rsplit(".", 1)[1].lower()
-                    not in allowed_extensions
+                    in allowed_extensions
                 ):
                     # File Name
                     xml_file_name = (
@@ -169,36 +169,30 @@ class KapalData(Resource):
         allowed_extensions = {"xml"}
         current_datetime = datetime.datetime.now()
         str_datetime = current_datetime.strftime("%Y_%m_%d_%H_%M_%S")
-        if uploaded_file is not None:
-            if (
-                "." in uploaded_file.filename
-                and uploaded_file.filename.rsplit(".", 1)[1].lower()
-                not in allowed_extensions
-            ):
-                # File Name
-                file_name = (
-                    f"{str_datetime}_{call_sign}."
-                    + uploaded_file.filename.rsplit(".", 1)[1].lower()
-                )
+        if image is not None:
+            if uploaded_file is not None:
+                if (
+                    "." in uploaded_file.filename
+                    and uploaded_file.filename.rsplit(".", 1)[1].lower()
+                    in allowed_extensions
+                ):
+                    # File Name
+                    file_name = (
+                        f"{str_datetime}_{call_sign}."
+                        + uploaded_file.filename.rsplit(".", 1)[1].lower()
+                    )
 
-                if os.path.exists(f"{file_path}{kapal.xml_file}"):
-                    os.remove(f"{file_path}{kapal.xml_file}")
-                kapal.xml_file = file_name
+                    if os.path.exists(f"{file_path}{kapal.xml_file}"):
+                        os.remove(f"{file_path}{kapal.xml_file}")
+                    kapal.xml_file = file_name
 
-                db.session.commit()
-                # File Uploaded
-                uploaded_file.save(file_path + file_name)
-
-                return {
-                    "message": "Kapal updated successfully.",
-                    "status": 201,
-                }, 201
-            else:
-                return {
-                    "message": "Invalid file extension. Allowed extensions: .xml",
-                    "status": 400,
-                }, 400
-        elif image is not None:
+                    # File Uploaded
+                    uploaded_file.save(file_path + file_name)
+                else:
+                    return {
+                        "message": "Invalid file extension. Allowed extensions: .xml",
+                        "status": 400,
+                    }, 400
             image_file_name = f"{str_datetime}_{call_sign}." + "png"
             if os.path.exists(f"{file_kapal_image_path}{kapal.image}"):
                 os.remove(f"{file_kapal_image_path}{kapal.image}")
