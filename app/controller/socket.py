@@ -16,6 +16,8 @@ from app.model.mapping import Mapping
 # Dictionary to store user sessions
 user_kapal_session = {}
 
+data_kapal_coor = {}
+
 
 def socketrun1second():
     with app.app_context():
@@ -83,87 +85,15 @@ class KapalSocket:
         call_sign = payload.get("call_sign", None)
         page = payload.get("page", 1)
         perpage = payload.get("perpage", 1000)
-        offset = (page - 1) * perpage
+        # offset = (page - 1) * perpage
 
-        latest_series_id_subquery = (
-            db.session.query(
-                Coordinate.call_sign,
-                db.func.max(Coordinate.series_id).label("max_series_id"),
-            )
-            .group_by(Coordinate.call_sign)
-            .subquery()
-        )
-        kapal_coor = (
-            db.session.query(
-                Coordinate,
-                Kapal,
-                CoordinateGGA,
-                CoordinateHDT,
-                CoordinateVTG,
-            )
-            .outerjoin(Kapal, Coordinate.call_sign == Kapal.call_sign)
-            .outerjoin(
-                CoordinateGGA, Coordinate.id_coor_gga == CoordinateGGA.id_coor_gga
-            )
-            .outerjoin(
-                CoordinateHDT, Coordinate.id_coor_hdt == CoordinateHDT.id_coor_hdt
-            )
-            .outerjoin(
-                CoordinateVTG, Coordinate.id_coor_vtg == CoordinateVTG.id_coor_vtg
-            )
-            .join(
-                latest_series_id_subquery,
-                db.and_(
-                    Coordinate.call_sign == latest_series_id_subquery.c.call_sign,
-                    Coordinate.series_id == latest_series_id_subquery.c.max_series_id,
-                ),
-            )
-        )
-
-        kapal_coor_page = kapal_coor.offset(offset).limit(perpage)
+        
         data_json = {
-            "message": "Data telah ditemukan",
+            "message": "Data telah ditemukansfsfd",
             "status": 200,
             "perpage": perpage,
             "page": page,
-            "total": kapal_coor.count(),
-            "data": [
-                {
-                    "id_client": getattr(kapal, "id_client", None),
-                    "call_sign": getattr(kapal, "call_sign", None),
-                    "flag": getattr(kapal, "flag", None),
-                    "kelas": getattr(kapal, "kelas", None),
-                    "builder": getattr(kapal, "builder", None),
-                    "status": getattr(kapal, "status", None),
-                    "size": getattr(kapal, "size", None),
-                    "year_built": getattr(kapal, "year_built", None),
-                    "xml_file": getattr(kapal, "xml_file", None),
-                    "image": getattr(kapal, "image", None),
-                    "coor": {
-                        "id_coor": getattr(coor, "id_coor", None),
-                        "default_heading": getattr(coor, "default_heading", None),
-                        "coor_gga": {
-                            "latitude": getattr(coor_gga, "latitude", None),
-                            "longitude": getattr(coor_gga, "longitude", None),
-                            "gps_quality_indicator": getattr(coor_gga, "gps_quality_indicator", None),
-                        },
-                        "coor_hdt": {
-                            "id_coor_hdt": getattr(coor_hdt, "id_coor_hdt", None),
-                            "heading_degree": getattr(coor_hdt, "heading_degree", None),
-                        },
-                        "coor_vtg": {
-                            "id_coor_vtg": getattr(coor_vtg, "id_coor_vtg", None),
-                            "speed_in_knots": getattr(coor_vtg, "speed_in_knots", None),
-                        },
-                    },
-                }
-                for coor, kapal, coor_gga, coor_hdt, coor_vtg in (
-                    kapal_coor_page.all()
-                    if call_sign is None
-                    else kapal_coor.filter(Kapal.call_sign == call_sign).all()
-                )
-                # for kapal,coor_gga,coor_hdt,coor_vtg in (kapal_coor_page.all() if call_sign is None else kapal_coor.filter(Kapal.call_sign == call_sign).all())
-            ],
+            "data": [kapal for kapal in (data_kapal_coor.values() if call_sign is None else [data_kapal_coor.get(call_sign)])],
         }
         return data_json
 
@@ -258,7 +188,7 @@ class KapalLatlongSocket:
             "call_sign": call_sign,
             "data": [
                 {
-                    "id_coor": getattr(coor, "id_coor", None),\
+                    "id_coor": getattr(coor, "id_coor", None),
                     "default_heading": getattr(coor, "default_heading", None),
                     "latitude": getattr(coor_gga, "latitude", None),
                     "longitude": getattr(coor_gga, "longitude", None),
@@ -364,3 +294,4 @@ class MappingSocket:
             ],
         }
         return data_json
+
