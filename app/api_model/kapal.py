@@ -16,6 +16,7 @@ kapal_model = api.model(
         "xml_file": fields.String,
         "image": fields.String,
         "year_built": fields.String,
+        "heading_direction": fields.Integer,
         "created_at": fields.DateTime,
         "updated_at": fields.DateTime,
         "client": fields.Nested(client_model),
@@ -65,6 +66,7 @@ insert_kapal_parser.add_argument("flag", type=str)
 insert_kapal_parser.add_argument("kelas", type=str)
 insert_kapal_parser.add_argument("builder", type=str)
 insert_kapal_parser.add_argument("year_built", type=str)
+insert_kapal_parser.add_argument("heading_direction", type=int)
 insert_kapal_parser.add_argument(
     "size", type=str, choices=("small", "medium", "large", "extra_large")
 )
@@ -84,6 +86,7 @@ update_kapal_parser.add_argument("flag", type=str)
 update_kapal_parser.add_argument("kelas", type=str)
 update_kapal_parser.add_argument("builder", type=str)
 update_kapal_parser.add_argument("year_built", type=str)
+update_kapal_parser.add_argument("heading_direction", type=int)
 update_kapal_parser.add_argument(
     "size", type=str, choices=("small", "medium", "large", "extra_large")
 )

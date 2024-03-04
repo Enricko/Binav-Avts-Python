@@ -18,6 +18,7 @@ class Kapal(db.Model):
         db.String(255), nullable=False
     )
     builder = db.Column(db.String(255), nullable=False)
+    heading_direction = db.Column(db.Integer, nullable=False)
     year_built = db.Column(
         db.String(4), nullable=False
     )  # Assuming the year is a 4-digit string
@@ -78,6 +79,12 @@ class Kapal(db.Model):
         if not year_built:
             raise AssertionError("year_built field is required")
         return year_built
+
+    @validates("heading_direction")
+    def validate_heading_direction(self, key, heading_direction):
+        if not heading_direction:
+            raise AssertionError("heading_direction field is required")
+        return heading_direction
     
     @validates("size")
     def validate_size(self, key, size):
@@ -94,5 +101,5 @@ class Kapal(db.Model):
         return image
 
     def __repr__(self):
-        return f"<Kapal(call_sign={self.call_sign}, id_client={self.id_client}, status={self.status}, flag={self.flag}, class_={self.class_}, builder={self.builder}, year_built={self.year_built}, size={self.size}, xml_file={self.xml_file},image={self.image}, timestamps={self.timestamps})>"
+        return f"<Kapal(call_sign={self.call_sign}, id_client={self.id_client}, status={self.status}, flag={self.flag}, class_={self.class_}, builder={self.builder}, year_built={self.year_built}, heading_direction={self.heading_direction}, size={self.size}, xml_file={self.xml_file},image={self.image}, timestamps={self.timestamps})>"
 

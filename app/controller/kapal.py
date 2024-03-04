@@ -59,6 +59,7 @@ class KapalList(Resource):
         kelas = args["kelas"]
         builder = args["builder"]
         year_built = args["year_built"]
+        heading_direction = args["heading_direction"]
         size = args["size"]
         status = str(args["status"]).lower() == "true"
         uploaded_file = args["xml_file"]
@@ -98,6 +99,7 @@ class KapalList(Resource):
                 kelas=kelas,
                 builder=builder,
                 year_built=year_built,
+                heading_direction=heading_direction,
                 size=size,
                 status=status,
                 xml_file=xml_file_name,
@@ -147,6 +149,7 @@ class KapalData(Resource):
         kelas = args["kelas"]
         builder = args["builder"]
         year_built = args["year_built"]
+        heading_direction = args["heading_direction"]
         size = args["size"]
         status = str(args["status"]).lower() == "true"
         uploaded_file = args["xml_file"]
@@ -162,6 +165,7 @@ class KapalData(Resource):
         kapal.kelas = kelas
         kapal.builder = builder
         kapal.year_built = year_built
+        kapal.heading_direction = heading_direction
         kapal.size = size
         kapal.status = status
 
