@@ -108,6 +108,7 @@ def set_kapal_coor_data(call_sign):
                 "year_built": getattr(kapal, "year_built", None),
                 "xml_file": getattr(kapal, "xml_file", None),
                 "image": getattr(kapal, "image", None),
+                "heading_direction": getattr(kapal, "heading_direction", None),
                 "coor": {
                     "id_coor": getattr(coor, "id_coor", None),
                     "default_heading": getattr(coor, "default_heading", None),

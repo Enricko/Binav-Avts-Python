@@ -82,6 +82,8 @@ class Kapal(db.Model):
 
     @validates("heading_direction")
     def validate_heading_direction(self, key, heading_direction):
+        if heading_direction < 0 and heading_direction > 360:
+            raise AssertionError("heading_direction value must be between 0 and 360")
         if not heading_direction:
             raise AssertionError("heading_direction field is required")
         return heading_direction
