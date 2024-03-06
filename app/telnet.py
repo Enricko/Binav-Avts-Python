@@ -24,7 +24,7 @@ def telnet_worker(ip, port, call_sign, type_ip):
                 with telnetlib.Telnet(ip, port) as tn:
                     while True:
                         try:
-                            data = tn.read_until(b"\n").decode("ascii").strip()
+                            data = tn.read_until(b"\n",timeout=1).decode("ascii").strip()
                             if (
                                 checked_configs != {}
                                 and (ip, port) not in checked_configs.keys()
@@ -32,6 +32,7 @@ def telnet_worker(ip, port, call_sign, type_ip):
                                 checked_configs.pop((ip, port))
                                 break
                             if not data:
+                                print("stop")
                                 break  # Exit the inner loop if no data is available
                             if ("GGA" in data) and (
                                 type_ip == "gga" or type_ip == "all"
@@ -61,102 +62,113 @@ def telnet_worker(ip, port, call_sign, type_ip):
 
 
 def set_kapal_coor_data(call_sign):
-    latest_series_id_subquery = (
-        db.session.query(
-            Coordinate.call_sign,
-            db.func.max(Coordinate.series_id).label("max_series_id"),
-        )
-        .group_by(Coordinate.call_sign)
-        .subquery()
-    )
-    kapal_coor = (
-        db.session.query(
-            Coordinate,
-            Kapal,
-            CoordinateGGA,
-            CoordinateHDT,
-            CoordinateVTG,
-        )
-        .outerjoin(Kapal, Coordinate.call_sign == Kapal.call_sign)
-        .outerjoin(CoordinateGGA, Coordinate.id_coor_gga == CoordinateGGA.id_coor_gga)
-        .outerjoin(CoordinateHDT, Coordinate.id_coor_hdt == CoordinateHDT.id_coor_hdt)
-        .outerjoin(CoordinateVTG, Coordinate.id_coor_vtg == CoordinateVTG.id_coor_vtg)
-        .join(
-            latest_series_id_subquery,
-            db.and_(
-                Coordinate.call_sign == latest_series_id_subquery.c.call_sign,
-                Coordinate.series_id == latest_series_id_subquery.c.max_series_id,
-            ),
-        )
-    )
-
-    coor, kapal, coor_gga, coor_hdt, coor_vtg = kapal_coor.filter(
-        Kapal.call_sign == call_sign
-    ).first()
-    print(getattr(coor, "id_coor", None))
-    data_kapal_coor[call_sign] = {
-        "telnet_status": False,
-        "id_client": getattr(kapal, "id_client", None),
-        "call_sign": getattr(kapal, "call_sign", None),
-        "flag": getattr(kapal, "flag", None),
-        "kelas": getattr(kapal, "kelas", None),
-        "builder": getattr(kapal, "builder", None),
-        "status": getattr(kapal, "status", None),
-        "size": getattr(kapal, "size", None),
-        "year_built": getattr(kapal, "year_built", None),
-        "xml_file": getattr(kapal, "xml_file", None),
-        "image": getattr(kapal, "image", None),
-        "coor": {
-            "id_coor": getattr(coor, "id_coor", None),
-            "default_heading": getattr(coor, "default_heading", None),
-            "coor_gga": {
-                "latitude": getattr(coor_gga, "latitude", None),
-                "longitude": getattr(coor_gga, "longitude", None),
-                "gps_quality_indicator": getattr(
-                    coor_gga, "gps_quality_indicator", None
-                ),
-            },
-            "coor_hdt": {
-                "heading_degree": getattr(coor_hdt, "heading_degree", None),
-            },
-            "coor_vtg": {
-                "speed_in_knots": getattr(coor_vtg, "speed_in_knots", None),
-            },
-        },
-    }
+    with app.app_context():
+        try:
+            latest_series_id_subquery = (
+                db.session.query(
+                    Coordinate.call_sign,
+                    db.func.max(Coordinate.series_id).label("max_series_id"),
+                )
+                .group_by(Coordinate.call_sign)
+                .subquery()
+            )
+            kapal_coor = (
+                db.session.query(
+                    Coordinate,
+                    Kapal,
+                    CoordinateGGA,
+                    CoordinateHDT,
+                    CoordinateVTG,
+                )
+                .outerjoin(Kapal, Coordinate.call_sign == Kapal.call_sign)
+                .outerjoin(CoordinateGGA, Coordinate.id_coor_gga == CoordinateGGA.id_coor_gga)
+                .outerjoin(CoordinateHDT, Coordinate.id_coor_hdt == CoordinateHDT.id_coor_hdt)
+                .outerjoin(CoordinateVTG, Coordinate.id_coor_vtg == CoordinateVTG.id_coor_vtg)
+                .join(
+                    latest_series_id_subquery,
+                    db.and_(
+                        Coordinate.call_sign == latest_series_id_subquery.c.call_sign,
+                        Coordinate.series_id == latest_series_id_subquery.c.max_series_id,
+                    ),
+                )
+            )
+    
+            coor, kapal, coor_gga, coor_hdt, coor_vtg = kapal_coor.filter(
+                Kapal.call_sign == call_sign
+            ).first()
+            data_kapal_coor[call_sign] = {
+                "telnet_status": False,
+                "id_client": getattr(kapal, "id_client", None),
+                "call_sign": getattr(kapal, "call_sign", None),
+                "flag": getattr(kapal, "flag", None),
+                "kelas": getattr(kapal, "kelas", None),
+                "builder": getattr(kapal, "builder", None),
+                "status": getattr(kapal, "status", None),
+                "size": getattr(kapal, "size", None),
+                "year_built": getattr(kapal, "year_built", None),
+                "xml_file": getattr(kapal, "xml_file", None),
+                "image": getattr(kapal, "image", None),
+                "coor": {
+                    "id_coor": getattr(coor, "id_coor", None),
+                    "default_heading": getattr(coor, "default_heading", None),
+                    "coor_gga": {
+                        "latitude": getattr(coor_gga, "latitude", None),
+                        "longitude": getattr(coor_gga, "longitude", None),
+                        "gps_quality_indicator": getattr(
+                            coor_gga, "gps_quality_indicator", None
+                        ),
+                    },
+                    "coor_hdt": {
+                        "heading_degree": getattr(coor_hdt, "heading_degree", None),
+                    },
+                    "coor_vtg": {
+                        "speed_in_knots": getattr(coor_vtg, "speed_in_knots", None),
+                    },
+                },
+            }
+            db.session.commit()
+        except Exception as e:
+            app.logger.debug(f"Insert Coor error : {e}")
+            db.session.rollback()
+        finally:
+            db.session.close()
 
 
 def change_socket_data(call_sign, type_coor, data):
-    parts = data.split(",")
-    gga_quality_indicator = [
-        "Fix not valid",
-        "GPS fix",
-        "Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon, RTX in GVBS mode",
-        "Not applicable",
-        "RTK Fixed, xFill",
-        "RTK Float, OmniSTAR XP/HP, Location RTK, RTX",
-        "INS Dead reckoning",
-    ]
-
-    data_kapal_coor[call_sign]["telnet_status"] = True
-    if type_coor == "coor_gga":
-        latitude = degree2decimal(float(parts[2]), parts[3])
-        longitude = degree2decimal(float(parts[4]), parts[5])
-        gps_quality_indicator = int(parts[6])
-
-        data_kapal_coor[call_sign]["coor"][type_coor]["latitude"] = latitude
-        data_kapal_coor[call_sign]["coor"][type_coor]["longitude"] = longitude
-        data_kapal_coor[call_sign]["coor"][type_coor]["gps_quality_indicator"] = (
-            gga_quality_indicator[gps_quality_indicator]
-        )
-
-    if type_coor == "coor_hdt":
-        heading_degree = float(parts[1])
-        data_kapal_coor[call_sign]["coor"][type_coor]["heading_degree"] = heading_degree
-
-    if type_coor == "coor_vtg":
-        speed_in_knots = float(parts[5])
-        data_kapal_coor[call_sign]["coor"][type_coor]["speed_in_knots"] = speed_in_knots
+    try:
+        parts = data.split(",")
+        gga_quality_indicator = [
+            "Fix not valid",
+            "GPS fix",
+            "Differential GPS fix (DGNSS), SBAS, OmniSTAR VBS, Beacon, RTX in GVBS mode",
+            "Not applicable",
+            "RTK Fixed, xFill",
+            "RTK Float, OmniSTAR XP/HP, Location RTK, RTX",
+            "INS Dead reckoning",
+        ]
+    
+        data_kapal_coor[call_sign]["telnet_status"] = True
+        if type_coor == "coor_gga":
+            latitude = degree2decimal(float(parts[2]), parts[3])
+            longitude = degree2decimal(float(parts[4]), parts[5])
+            gps_quality_indicator = int(parts[6])
+    
+            data_kapal_coor[call_sign]["coor"][type_coor]["latitude"] = latitude
+            data_kapal_coor[call_sign]["coor"][type_coor]["longitude"] = longitude
+            data_kapal_coor[call_sign]["coor"][type_coor]["gps_quality_indicator"] = (
+                gga_quality_indicator[gps_quality_indicator]
+            )
+    
+        if type_coor == "coor_hdt":
+            heading_degree = float(parts[1])
+            data_kapal_coor[call_sign]["coor"][type_coor]["heading_degree"] = heading_degree
+    
+        if type_coor == "coor_vtg":
+            speed_in_knots = float(parts[5])
+            data_kapal_coor[call_sign]["coor"][type_coor]["speed_in_knots"] = speed_in_knots
+    except Exception as e:
+        print(e)
+        app.logger.debug(f"change_socket_data error : {e}")
 
 
 # Function to handle $GNGGA messages

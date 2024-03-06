@@ -124,7 +124,6 @@ def check_for_new_configurations():
             except Exception as e:
                 logging.info(f"check_for_new_configurations : {e}")
             finally:
-                logging.info("retry check_for_new_configurations")
                 db.session.commit()
                 db.session.close()
             time.sleep(15)

@@ -51,7 +51,7 @@ def api_handle_exception(func):
             db.session.rollback()
             print(str(e))
             return {
-                "message": str(e),
+                "message": f"Data not found. {str(e)}",
                 "status": 400,
             }, 404
         except IntegrityError as e:
